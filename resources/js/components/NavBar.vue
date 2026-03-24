@@ -17,32 +17,32 @@ export default {
 <template>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-           <router-link class="navbar-brand" to="/">
-                <img src="/images/icon.png" alt="Logo" style="height: 30px;" />
-                File Manager
+            <router-link class="navbar-brand" to="/">
+                <img src="/images/logo-icon.png" alt="Logo" style="height: 50px;" />
+                FileFusion
             </router-link>
 
             <button class="navbar-toggler" type="button" @click="toggleNavbar">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-          <div class="collapse navbar-collapse" :class="{ show: isNavbarOpen }" id="navbarNav">
+            <div class="collapse navbar-collapse" :class="{ show: isNavbarOpen }" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                       <router-link class="nav-link active" to="/home">Home</router-link>
+                        <router-link class="nav-link active" to="/home">Home</router-link>
                     </li>
 
                     <li class="nav-item">
-                       <router-link class="nav-link" to="/posts">Post</router-link>
+                        <router-link class="nav-link" to="/posts">Post</router-link>
                     </li>
                     <li class="nav-item">
-                       <router-link class="nav-link" to="/uploads">Users</router-link>
+                        <router-link class="nav-link" to="/uploads">Users</router-link>
                     </li>
                     <li class="nav-item">
-                       <router-link class="nav-link" to="/gdrive">GoogleDrive</router-link>
+                        <router-link class="nav-link" to="/gdrive">GoogleDrive</router-link>
                     </li>
                     <li class="nav-item">
-                       <router-link class="nav-link" to="/odrive">OneDrive</router-link>
+                        <router-link class="nav-link" to="/odrive">OneDrive</router-link>
                     </li>
                     <!-- <li class="nav-item">
                         <router-link class="nav-link" to="/about"
@@ -59,10 +59,12 @@ export default {
 .navbar-brand {
     display: flex;
     align-items: center;
-    color: magenta;
+    color: #0087ff;
+        font-weight: bold;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
 .navbar-brand:hover {
-    color: magenta;
+    color: #0087ff;
 }
 </style>
