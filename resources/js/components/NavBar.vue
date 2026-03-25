@@ -97,7 +97,7 @@ export default {
 <style scoped>
 /* ========== NAVBAR BASE ========== */
 .nav-bar {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;
