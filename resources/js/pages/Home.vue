@@ -11,18 +11,6 @@ export default {
 
 <template>
     <div class="dashboard">
-
-        <div class="card" @click="goTo('/posts')">
-            <div class="icon">📝</div>
-            <h3>Post Management</h3>
-        </div>
-
-        <div class="card" @click="goTo('/uploads')">
-            <!-- <div class="icon">👤</div> -->
-             <i class="fa-solid fa-users icon"></i>
-            <h3>User Management</h3>
-        </div>
-
         <div class="card" @click="goTo('/gdrive')">
             <!-- <div class="icon">☁️</div> -->
             <!-- <i class="fab fa-google-drive text-success icon"></i> -->
@@ -33,7 +21,7 @@ export default {
         <div class="card" @click="goTo('/odrive')">
             <!-- <div class="icon">📁</div> -->
                <img
-                    src="/storage/image/onedrvie.png"
+src="/images/onedrvie.png"
                     alt="OneDrive"
                     width="60"
                     height="50"

@@ -3,7 +3,7 @@
         <!-- Header -->
        <div class="explorer-header text-center text-white py-4 animate-fade-in">
             <h2 class="fw-bold m-0 d-flex align-items-center justify-content-center">
-                <img src="/storage/image/onedrvie.png" alt="OneDrive" width="50" height="40" class="me-2" />
+                <img src="/images/onedrvie.png" alt="OneDrive" width="50" height="40" class="me-2" />
                 My OneDrive
             </h2>
 
