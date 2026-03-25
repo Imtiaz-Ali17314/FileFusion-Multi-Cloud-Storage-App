@@ -1,136 +1,202 @@
 <template>
-    <div class="explorer-container">
-        <!-- Header -->
-       <div class="explorer-header text-center text-white py-4 animate-fade-in">
-            <h2 class="fw-bold m-0 d-flex align-items-center justify-content-center">
-                <img src="/images/onedrvie.png" alt="OneDrive" width="50" height="40" class="me-2" />
-                My OneDrive
-            </h2>
+    <div class="onedrive-layout">
 
-            <p class="mb-0 opacity-75">Manage your files with ease</p>
-        </div>
-
-        <!-- Toolbar -->
-        <div
-           class="toolbar d-flex flex-wrap gap-2 justify-content-between align-items-center p-3 text-white shadow animate-slide-up">
-            <div class="d-flex gap-2 align-items-center">
-                <button class="btn btn-primary" @click="goHome">🏠 Home</button>
-
-                <!-- Breadcrumbs -->
-               <nav aria-label="breadcrumb text-white" class="ms-2">
-                    <ol class="breadcrumb mb-0">
-                       <li class="breadcrumb-item" :class="{ active: pathSegments.length === 0 }">
-                            <a href="#" @click.prevent="goHome" v-if="pathSegments.length">root</a>
-                            <span v-else>root</span>
-                        </li>
-                       <li v-for="(seg, idx) in pathSegments" :key="idx" class="breadcrumb-item"
-                            :class="{ active: idx === pathSegments.length - 1 }">
-                            <a v-if="idx !== pathSegments.length - 1" href="#" @click.prevent="goToCrumb(idx)">
-                                {{ seg }}
-                            </a>
-                            <span v-else>{{ seg }}</span>
-                        </li>
-                    </ol>
-                </nav>
+        <!-- ========== SIDEBAR ========== -->
+        <aside class="od-sidebar">
+            <div class="sidebar-header">
+                <img src="/images/onedrvie.png" alt="OneDrive" class="sidebar-logo" />
+                <span>OneDrive</span>
             </div>
 
-            <!-- Right tools -->
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-               <div>
-                    <input v-model="query" type="text" class="form-control" placeholder=" 🔍 Search files & folders…"
-                        style="width: 25rem;" />
-                </div>
-
-              <div class="custom-file-upload" style="display: inline-block; position: relative;">
-                    <!-- Hidden file input -->
-                    <input type="file" id="fileInput" multiple @change="uploadFiles" style="display: none;" />
-
-                  <!-- Custom button -->
-                    <label for="fileInput" class="btn btn-primary"
-                        style="width: 150px; text-align: center; cursor: pointer;">
-                        <i class="fa-solid fa-upload"></i> Uploads
-                    </label>
-                </div>
-                <button class="btn btn-success" @click="createFolderPrompt">
-                   <i class="fa-solid fa-plus"></i> New Folder
+            <nav class="sidebar-nav">
+                <button class="sidebar-item active" @click="goHome">
+                    <i class="bi bi-hdd"></i>
+                    <span>My Files</span>
                 </button>
-               <a href="/auth/onedrive" class="btn btn-danger reconnect-btn">
-                    <i class="fas fa-sync-alt"></i> Connect / Reconnect
+                <button class="sidebar-item" disabled>
+                    <i class="bi bi-people"></i>
+                    <span>Shared</span>
+                </button>
+                <button class="sidebar-item" disabled>
+                    <i class="bi bi-clock-history"></i>
+                    <span>Recent</span>
+                </button>
+                <button class="sidebar-item" disabled>
+                    <i class="bi bi-trash3"></i>
+                    <span>Trash</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-footer">
+                <a href="/auth/onedrive" class="connect-btn">
+                    <i class="bi bi-plug"></i>
+                    <span>Connect / Reconnect</span>
                 </a>
             </div>
-        </div>
+        </aside>
 
-        <!-- Empty / Error states -->
-       <div v-if="!loading && filteredFiles.length === 0" class="empty-state text-white-50 text-center py-5">
-            <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
-            <div class="fs-5">No items found here.</div>
-        </div>
+        <!-- ========== MAIN CONTENT ========== -->
+        <main class="od-main">
 
-        <!-- Grid -->
-        <div class="row g-3">
-           <div v-for="item in filteredFiles" :key="item.id" class="col-12 col-sm-6 col-md-4 col-lg-3">
-                <div class="file-card shadow-sm p-3 rounded text-center animate-pop" @dblclick="openItem(item)">
-                    <div class="file-icon-wrap mb-2">
-                        <!-- ✅ Hamesha icon hi dikhana hai -->
-                        <i :class="fileIcon(item)" class="fs-1"></i>
+            <!-- Top Bar -->
+            <div class="od-topbar">
+                <div class="topbar-left">
+                    <button v-if="pathSegments.length > 0" class="back-btn" @click="goHome">
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+
+                    <nav class="od-breadcrumbs" v-if="pathSegments.length > 0">
+                        <span class="crumb" @click="goHome">Root</span>
+                        <template v-for="(seg, idx) in pathSegments" :key="idx">
+                            <i class="bi bi-chevron-right crumb-sep"></i>
+                            <span
+                                class="crumb"
+                                :class="{ 'crumb-active': idx === pathSegments.length - 1 }"
+                                @click="idx !== pathSegments.length - 1 && goToCrumb(idx)"
+                            >
+                                {{ seg }}
+                            </span>
+                        </template>
+                    </nav>
+                    <h2 v-else class="topbar-title">My Files</h2>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="search-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input
+                            v-model="query"
+                            type="text"
+                            class="search-input"
+                            placeholder="Search files..."
+                        />
                     </div>
 
-                  <div class="file-name text-truncate fw-semibold" :title="item.name">
+                    <div class="topbar-actions">
+                        <label class="action-btn upload-btn" for="odFileInput">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span>Upload</span>
+                        </label>
+                        <input
+                            type="file"
+                            id="odFileInput"
+                            multiple
+                            @change="uploadFiles"
+                            style="display: none;"
+                        />
+
+                        <button class="action-btn" @click="createFolderPrompt">
+                            <i class="bi bi-folder-plus"></i>
+                            <span>New Folder</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loading" class="od-loading">
+                <div class="loading-spinner"></div>
+                <span>Loading files...</span>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="filteredFiles.length === 0 && !loading" class="od-empty">
+                <div class="empty-icon">
+                    <i class="bi bi-folder2-open"></i>
+                </div>
+                <h3>No items found</h3>
+                <p>This folder is empty or no files match your search.</p>
+            </div>
+
+            <!-- Files Grid -->
+            <div v-else class="files-grid">
+                <div
+                    v-for="(item, i) in filteredFiles"
+                    :key="item.id"
+                    class="file-card"
+                    :style="{ animationDelay: (i * 0.03) + 's' }"
+                    @dblclick="openItem(item)"
+                >
+                    <div class="file-icon" :style="{ color: getIconColor(item) }">
+                        <i :class="fileIcon(item)"></i>
+                    </div>
+
+                    <div class="file-name" :title="item.name">
                         {{ item.name }}
                     </div>
 
-                  <div class="text-muted small" v-if="!item.folder && humanSize(item.size)">
+                    <div class="file-meta" v-if="!item.folder && humanSize(item.size)">
                         {{ humanSize(item.size) }}
                     </div>
+                    <div class="file-meta" v-else-if="item.folder">Folder</div>
 
                     <!-- Actions -->
-                   <div class="file-actions mt-3 d-flex justify-content-center gap-2">
-                       <button class="btn btn-sm btn-outline-success" title="Open / Preview"
-                            @click.stop="preview(item)">
+                    <div class="file-actions">
+                        <button
+                            class="file-action-btn"
+                            title="Preview"
+                            @click.stop="preview(item)"
+                        >
                             <i class="bi bi-eye"></i>
                         </button>
-                       <button class="btn btn-sm btn-outline-primary" title="Download" @click.stop="download(item)">
-                            <i class="bi bi-arrow-down-circle"></i>
+                        <button
+                            v-if="!item.folder"
+                            class="file-action-btn"
+                            title="Download"
+                            @click.stop="download(item)"
+                        >
+                            <i class="bi bi-download"></i>
                         </button>
-                       <button class="btn btn-sm btn-outline-danger" title="Delete" @click.stop="deleteItem(item)">
-                            <i class="bi bi-trash"></i>
+                        <button
+                            class="file-action-btn file-action-danger"
+                            title="Delete"
+                            @click.stop="deleteItem(item)"
+                        >
+                            <i class="bi bi-trash3"></i>
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
 
-        <!-- Loader -->
-        <div v-if="loading" class="loading-overlay">
-            <div class="spinner-border" role="status" />
-            <div class="mt-2 fw-semibold">Loading…</div>
-        </div>
-
-        <!-- Toast -->
-        <div v-if="toast.show" class="toast-wrap">
-            <div class="toast-inner" :class="toast.type">
-                {{ toast.message }}
+        <!-- ========== TOAST ========== -->
+        <transition name="toast">
+            <div v-if="toast.show" class="toast-wrap">
+                <div class="toast-inner" :class="toast.type">
+                    <i :class="toast.type === 'ok' ? 'bi bi-check-circle' : 'bi bi-exclamation-circle'"></i>
+                    {{ toast.message }}
+                </div>
             </div>
-        </div>
+        </transition>
 
-        <!-- Preview Modal -->
-       <div v-if="showPreview" class="preview-backdrop" @click.self="closePreview">
-            <div class="preview-modal">
-               <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="fw-semibold text-truncate">
-                        {{ previewItem?.name }}
+        <!-- ========== PREVIEW MODAL ========== -->
+        <transition name="modal">
+            <div v-if="showPreview" class="preview-backdrop" @click.self="closePreview">
+                <div class="preview-modal">
+                    <div class="preview-header">
+                        <div class="preview-title">
+                            <i class="bi bi-file-earmark"></i>
+                            {{ previewItem?.name }}
+                        </div>
+                        <button class="preview-close" @click="closePreview">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
-                   <button class="btn btn-sm btn-outline-secondary" @click="closePreview">
-                        ✕
-                    </button>
-                </div>
-                <!-- Use webUrl for embedded preview (Office online / image render) -->
-               <iframe v-if="previewUrl" :src="previewUrl" class="preview-frame" referrerpolicy="no-referrer"></iframe>
-                <div v-else class="text-center py-4 text-muted">
-                    Preview not available. Try Download.
+                    <iframe
+                        v-if="previewUrl"
+                        :src="previewUrl"
+                        class="preview-frame"
+                        referrerpolicy="no-referrer"
+                    ></iframe>
+                    <div v-else class="preview-unavailable">
+                        <i class="bi bi-eye-slash"></i>
+                        <p>Preview not available. Try downloading instead.</p>
+                    </div>
                 </div>
             </div>
-        </div>
+        </transition>
     </div>
 </template>
 
@@ -145,7 +211,7 @@ export default {
             loading: false,
             error: "",
             query: "",
-            currentPath: "/", // Graph path
+            currentPath: "/",
             showPreview: false,
             previewItem: null,
             previewUrl: "",
@@ -194,26 +260,39 @@ export default {
             return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
         },
         fileIcon(item) {
-            if (item.folder) return "bi bi-folder-fill text-warning";
+            if (item.folder) return "bi bi-folder-fill";
             const name = (item.name || "").toLowerCase();
             if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(name))
-                return "bi bi-file-image text-info";
-            if (name.endsWith(".pdf")) return "bi bi-file-pdf text-danger";
+                return "bi bi-file-image-fill";
+            if (name.endsWith(".pdf")) return "bi bi-file-pdf-fill";
             if (/\.(doc|docx)$/i.test(name))
-                return "bi bi-file-word text-primary";
+                return "bi bi-file-word-fill";
             if (/\.(xls|xlsx)$/i.test(name))
-                return "bi bi-file-excel text-success";
+                return "bi bi-file-excel-fill";
             if (/\.(ppt|pptx)$/i.test(name))
-                return "bi bi-file-ppt text-warning";
+                return "bi bi-file-ppt-fill";
             if (/\.(txt|md|json|xml|yml|yaml|csv|log)$/i.test(name))
-                return "bi bi-file-text text-secondary";
+                return "bi bi-file-text-fill";
             if (/\.(js|ts|vue|php|py|rb|java|c|cpp|cs|go|rs)$/i.test(name))
-                return "bi bi-file-code text-secondary";
+                return "bi bi-file-code-fill";
             if (/\.(mp4|mkv|mov|avi|webm)$/i.test(name))
-                return "bi bi-file-play text-muted";
+                return "bi bi-file-play-fill";
             if (/\.(mp3|wav|m4a|flac)$/i.test(name))
-                return "bi bi-file-music text-muted";
-            return "bi bi-file-earmark text-secondary";
+                return "bi bi-file-music-fill";
+            return "bi bi-file-earmark-fill";
+        },
+
+        getIconColor(item) {
+            if (item.folder) return "#f59e0b";
+            const name = (item.name || "").toLowerCase();
+            if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(name)) return "#06b6d4";
+            if (name.endsWith(".pdf")) return "#ef4444";
+            if (/\.(doc|docx)$/i.test(name)) return "#3b82f6";
+            if (/\.(xls|xlsx)$/i.test(name)) return "#22c55e";
+            if (/\.(ppt|pptx)$/i.test(name)) return "#f97316";
+            if (/\.(mp4|mkv|mov|avi|webm)$/i.test(name)) return "#a855f7";
+            if (/\.(mp3|wav|m4a|flac)$/i.test(name)) return "#ec4899";
+            return "#64748b";
         },
 
         // ------------ Path helpers ------------
@@ -245,7 +324,6 @@ export default {
         async fetchFiles(path = "/") {
             try {
                 this.loading = true;
-                // ✅ FIX: use /files (not /list)
                 const res = await axios.get(`${this.API_BASE}/files`, {
                     params: { path },
                 });
@@ -273,7 +351,6 @@ export default {
                         const form = new FormData();
                         form.append("file", f);
                         form.append("path", this.currentPath || "/");
-                        // ✅ FIX: keep old /upload route
                         await axios.post(`${this.API_BASE}/upload`, form, {
                             headers: { "Content-Type": "multipart/form-data" },
                         });
@@ -282,7 +359,7 @@ export default {
 
                 this.toastOk("Upload complete");
                 this.fetchFiles(this.currentPath);
-                event.target.value = ""; // reset
+                event.target.value = "";
             } catch (e) {
                 console.error(e);
                 this.toastErr("Upload failed");
@@ -296,7 +373,6 @@ export default {
             if (!name) return;
             try {
                 this.loading = true;
-                // ✅ FIX: use /folder (not /create-folder)
                 await axios.post(`${this.API_BASE}/folder`, {
                     name,
                     path: this.currentPath || "/",
@@ -368,207 +444,652 @@ export default {
 </script>
 
 <style scoped>
-/* Page bg */
-.explorer-container {
-    min-height: 100vh;
-    padding: 20px;
+/* ========== LAYOUT ========== */
+.onedrive-layout {
+    display: flex;
+    min-height: calc(100vh - var(--ff-nav-height, 64px));
 }
 
-/* Header glass */
-.explorer-header {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-    margin-bottom: 1rem;
+/* ========== SIDEBAR ========== */
+.od-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.02);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 24px 14px;
+    display: flex;
+    flex-direction: column;
+    animation: ff-slide-in-left 0.4s ease both;
 }
 
-/* Toolbar */
-.toolbar {
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    box-shadow: none;
-    padding: 10px 15px;
-    margin-bottom: 1rem;
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ff-text-primary, #e2e8f0);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 16px;
 }
 
-.toolbar:hover {
+.sidebar-logo {
+    width: 24px;
+    height: auto;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--ff-text-secondary, #94a3b8);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    text-align: left;
+    width: 100%;
+}
+
+.sidebar-item i {
+    font-size: 17px;
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-item:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.05);
+    color: var(--ff-text-primary, #e2e8f0);
 }
 
-.toolbar input {
+.sidebar-item.active {
+    background: rgba(0, 120, 212, 0.12);
+    color: #38bdf8;
+}
+
+.sidebar-item:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.sidebar-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 16px 10px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+}
+
+.connect-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #f87171;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.connect-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* ========== MAIN CONTENT ========== */
+.od-main {
+    flex: 1;
+    min-width: 0;
+    padding: 24px 28px;
+    animation: ff-fade-in 0.4s ease both;
+}
+
+/* ========== TOP BAR ========== */
+.od-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ff-text-secondary, #94a3b8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--ff-text-primary, #e2e8f0);
 }
 
-.toolbar input::placeholder {
-    color: rgba(255, 255, 255, 0.589);
+.topbar-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ff-text-primary, #e2e8f0);
+    margin: 0;
+    letter-spacing: -0.3px;
 }
 
 /* Breadcrumbs */
-.breadcrumb {
-    background: transparent;
+.od-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
-.breadcrumb-item a {
-    color: #fff !important;
-    text-decoration: none;
-}
-
-.breadcrumb-item.active {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.breadcrumb-item+.breadcrumb-item::before {
-    color: rgba(255, 255, 255, 0.5);
-}
-
-/* File cards */
-.file-card {
-    border-radius: 14px;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-    cursor: pointer;
-    border: 1px solid #f1f3f7;
-}
-
-.file-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 14px 28px rgba(22, 34, 68, 0.12);
-}
-
-.file-icon-wrap i {
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
-}
-
-.file-name {
+.crumb {
     font-size: 14px;
-    white-space: nowrap;
+    font-weight: 500;
+    color: var(--ff-text-secondary, #94a3b8);
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 4px 6px;
+    border-radius: 6px;
 }
 
-/* Loading overlay */
-.loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(16, 22, 48, 0.22);
-    backdrop-filter: blur(2px);
-    z-index: 50;
-    color: white;
+.crumb:hover:not(.crumb-active) {
+    color: var(--ff-text-primary, #e2e8f0);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.crumb-active {
+    color: var(--ff-text-primary, #e2e8f0);
+    cursor: default;
+}
+
+.crumb-sep {
+    font-size: 10px;
+    color: var(--ff-text-muted, #64748b);
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.search-wrapper {
+    position: relative;
+    width: 240px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--ff-text-muted, #64748b);
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ff-text-primary, #e2e8f0);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: var(--ff-text-muted, #64748b);
+}
+
+.search-input:focus {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ff-text-primary, #e2e8f0);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.upload-btn {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.1));
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #60a5fa;
+}
+
+.upload-btn:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(6, 182, 212, 0.15));
+}
+
+/* ========== LOADING ========== */
+.od-loading {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 80px 20px;
+    color: var(--ff-text-secondary, #94a3b8);
+    gap: 16px;
+    font-size: 14px;
 }
 
-/* Toast */
+.loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255, 255, 255, 0.08);
+    border-top-color: #0078d4;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== EMPTY STATE ========== */
+.od-empty {
+    text-align: center;
+    padding: 80px 20px;
+    animation: ff-fade-in 0.5s ease both;
+}
+
+.empty-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+    color: var(--ff-text-muted, #64748b);
+}
+
+.od-empty h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ff-text-primary, #e2e8f0);
+    margin: 0 0 8px;
+}
+
+.od-empty p {
+    font-size: 14px;
+    color: var(--ff-text-secondary, #94a3b8);
+    margin: 0;
+}
+
+/* ========== FILES GRID ========== */
+.files-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+}
+
+.file-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 24px 16px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: ff-scale-in 0.3s ease both;
+    position: relative;
+}
+
+.file-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(0, 120, 212, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.file-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease;
+}
+
+.file-card:hover .file-icon {
+    transform: scale(1.1);
+}
+
+.file-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ff-text-primary, #e2e8f0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.file-meta {
+    font-size: 11px;
+    color: var(--ff-text-muted, #64748b);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+/* File Actions */
+.file-actions {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.file-card:hover .file-actions {
+    opacity: 1;
+}
+
+.file-action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ff-text-secondary, #94a3b8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+}
+
+.file-action-btn:hover {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.file-action-danger:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ========== TOAST ========== */
 .toast-wrap {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 60;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
 }
 
 .toast-inner {
-    padding: 10px 14px;
-    border-radius: 10px;
-    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    color: white;
     font-weight: 600;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+    font-size: 14px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(12px);
 }
 
 .toast-inner.ok {
-    background: #22bb66;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .toast-inner.err {
-    background: #e05666;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
-/* Preview modal */
+.toast-enter-active,
+.toast-leave-active {
+    transition: all 0.3s ease;
+}
+
+.toast-enter-from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+}
+
+.toast-leave-to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+}
+
+/* ========== PREVIEW MODAL ========== */
 .preview-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(7, 10, 22, 0.55);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
     display: grid;
     place-items: center;
-    z-index: 70;
+    z-index: 9000;
     padding: 24px;
 }
 
 .preview-modal {
     width: min(1100px, 96vw);
     height: min(80vh, 900px);
-    background: #fff;
-    border-radius: 14px;
-    padding: 12px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.preview-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ff-text-primary, #e2e8f0);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preview-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ff-text-secondary, #94a3b8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.preview-close:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
 }
 
 .preview-frame {
     flex: 1;
     width: 100%;
     border: 0;
-    border-radius: 10px;
 }
 
-.thumb-preview {
-    max-width: 64px;
-    max-height: 64px;
-    border-radius: 8px;
-    object-fit: cover;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+.preview-unavailable {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--ff-text-muted, #64748b);
+    gap: 12px;
 }
 
-/* Animations */
-.animate-fade-in {
-    animation: fadeIn 0.5s ease both;
+.preview-unavailable i {
+    font-size: 40px;
 }
 
-.animate-slide-up {
-    animation: slideUp 0.4s ease both;
+.preview-unavailable p {
+    font-size: 14px;
+    margin: 0;
 }
 
-.animate-pop {
-    animation: pop 0.25s ease both;
+/* Modal animation */
+.modal-enter-active,
+.modal-leave-active {
+    transition: all 0.3s ease;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
+.modal-enter-from {
+    opacity: 0;
+}
+
+.modal-enter-from .preview-modal {
+    transform: scale(0.95);
+}
+
+.modal-leave-to {
+    opacity: 0;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes ff-slide-in-left {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ff-fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ff-scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 900px) {
+    .od-sidebar {
+        display: none;
     }
 
-    to {
+    .od-main {
+        padding: 20px 16px;
+    }
+
+    .search-wrapper {
+        width: 100%;
+    }
+
+    .od-topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .topbar-right {
+        flex-direction: column;
+    }
+
+    .topbar-actions {
+        width: 100%;
+    }
+
+    .action-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .files-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .file-card {
+        padding: 18px 12px 14px;
+    }
+
+    .file-actions {
         opacity: 1;
-        transform: none;
-    }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: none;
-    }
-}
-
-@keyframes pop {
-    from {
-        opacity: 0;
-        transform: scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
     }
 }
 </style>

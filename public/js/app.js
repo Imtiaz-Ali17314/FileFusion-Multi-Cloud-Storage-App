@@ -28319,26 +28319,32 @@ function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  name: "DriveFile",
   data: function data() {
     return {
       files: [],
       q: "",
       loading: false,
-      folderStack: []
+      folderStack: [],
+      activeSection: "mydrive"
     };
   },
   computed: {
-    // Search filter logic
     filtered: function filtered() {
       var q = this.q.trim().toLowerCase();
       if (!q) return this.files;
       return this.files.filter(function (f) {
         return (f.name || "").toLowerCase().includes(q);
       });
+    },
+    currentFolderName: function currentFolderName() {
+      if (this.folderStack.length === 0) {
+        return this.activeSection === "mydrive" ? "My Files" : "Shared with Me";
+      }
+      return "Files";
     }
   },
   methods: {
-    // Root options load karna
     loadRootOptions: function loadRootOptions() {
       var _this = this;
       return _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
@@ -28360,7 +28366,6 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         }, _callee);
       }))();
     },
-    // API se folder contents lana
     fetchFiles: function fetchFiles(apiUrl) {
       var _arguments = arguments,
         _this2 = this;
@@ -28389,21 +28394,21 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         }, _callee2, null, [[1,, 3, 4]]);
       }))();
     },
-    // Item open karna
     openItem: function openItem(f) {
       if (f.isFolder) {
         if (f.id === "mydrive") {
+          this.activeSection = "mydrive";
           this.fetchFiles("/google/drive/root");
         } else if (f.id === "shared") {
+          this.activeSection = "shared";
           this.fetchFiles("/google/drive/shared");
         } else {
           this.fetchFiles("/google/drive/folder/".concat(f.id));
         }
       } else {
-        window.open(f.webViewLink, "_blank"); // Preview open kare
+        window.open(f.webViewLink, "_blank");
       }
     },
-    // Back navigation
     goBack: function goBack() {
       if (this.folderStack.length > 1) {
         this.folderStack.pop();
@@ -28414,27 +28419,58 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
         this.loadRootOptions();
       }
     },
-    // Font Awesome icon ka naam return kare
+    sidebarNavigate: function sidebarNavigate(section) {
+      this.activeSection = section;
+      this.folderStack = [];
+      if (section === "mydrive") {
+        this.fetchFiles("/google/drive/root");
+      } else if (section === "shared") {
+        this.fetchFiles("/google/drive/shared");
+      } else {
+        this.loadRootOptions();
+      }
+    },
     getFileIcon: function getFileIcon(f) {
-      if (f.isFolder) return "fas fa-folder text-warning";
+      if (f.isFolder) return "bi bi-folder-fill";
       var ext = (f.name || "").split(".").pop().toLowerCase();
       var extIcons = {
-        pdf: "fas fa-file-pdf text-danger",
-        doc: "fas fa-file-word text-primary",
-        docx: "fas fa-file-word text-primary",
-        xls: "fas fa-file-excel text-success",
-        xlsx: "fas fa-file-excel text-success",
-        ppt: "fas fa-file-powerpoint text-warning",
-        pptx: "fas fa-file-powerpoint text-warning",
-        jpg: "fas fa-file-image text-info",
-        jpeg: "fas fa-file-image text-info",
-        png: "fas fa-file-image text-info",
-        gif: "fas fa-file-image text-info",
-        txt: "fas fa-file-alt text-secondary",
-        zip: "fas fa-file-archive text-muted",
-        rar: "fas fa-file-archive text-muted"
+        pdf: "bi bi-file-pdf-fill",
+        doc: "bi bi-file-word-fill",
+        docx: "bi bi-file-word-fill",
+        xls: "bi bi-file-excel-fill",
+        xlsx: "bi bi-file-excel-fill",
+        ppt: "bi bi-file-ppt-fill",
+        pptx: "bi bi-file-ppt-fill",
+        jpg: "bi bi-file-image-fill",
+        jpeg: "bi bi-file-image-fill",
+        png: "bi bi-file-image-fill",
+        gif: "bi bi-file-image-fill",
+        txt: "bi bi-file-text-fill",
+        zip: "bi bi-file-zip-fill",
+        rar: "bi bi-file-zip-fill"
       };
-      return extIcons[ext] || "fas fa-file text-dark";
+      return extIcons[ext] || "bi bi-file-earmark-fill";
+    },
+    getIconColor: function getIconColor(f) {
+      if (f.isFolder) return "#f59e0b";
+      var ext = (f.name || "").split(".").pop().toLowerCase();
+      var colors = {
+        pdf: "#ef4444",
+        doc: "#3b82f6",
+        docx: "#3b82f6",
+        xls: "#22c55e",
+        xlsx: "#22c55e",
+        ppt: "#f97316",
+        pptx: "#f97316",
+        jpg: "#06b6d4",
+        jpeg: "#06b6d4",
+        png: "#06b6d4",
+        gif: "#06b6d4",
+        txt: "#94a3b8",
+        zip: "#8b5cf6",
+        rar: "#8b5cf6"
+      };
+      return colors[ext] || "#64748b";
     }
   },
   mounted: function mounted() {
@@ -28459,13 +28495,26 @@ __webpack_require__.r(__webpack_exports__);
   name: "Navbar",
   data: function data() {
     return {
-      isNavbarOpen: false
+      isNavbarOpen: false,
+      scrolled: false
     };
   },
   methods: {
     toggleNavbar: function toggleNavbar() {
       this.isNavbarOpen = !this.isNavbarOpen;
+    },
+    closeNavbar: function closeNavbar() {
+      this.isNavbarOpen = false;
+    },
+    handleScroll: function handleScroll() {
+      this.scrolled = window.scrollY > 10;
     }
+  },
+  mounted: function mounted() {
+    window.addEventListener("scroll", this.handleScroll);
+  },
+  beforeUnmount: function beforeUnmount() {
+    window.removeEventListener("scroll", this.handleScroll);
   }
 });
 
@@ -28497,7 +28546,6 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       error: "",
       query: "",
       currentPath: "/",
-      // Graph path
       showPreview: false,
       previewItem: null,
       previewUrl: "",
@@ -28556,18 +28604,30 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
       return "".concat((bytes / Math.pow(1024, i)).toFixed(1), " ").concat(sizes[i]);
     },
     fileIcon: function fileIcon(item) {
-      if (item.folder) return "bi bi-folder-fill text-warning";
+      if (item.folder) return "bi bi-folder-fill";
       var name = (item.name || "").toLowerCase();
-      if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(name)) return "bi bi-file-image text-info";
-      if (name.endsWith(".pdf")) return "bi bi-file-pdf text-danger";
-      if (/\.(doc|docx)$/i.test(name)) return "bi bi-file-word text-primary";
-      if (/\.(xls|xlsx)$/i.test(name)) return "bi bi-file-excel text-success";
-      if (/\.(ppt|pptx)$/i.test(name)) return "bi bi-file-ppt text-warning";
-      if (/\.(txt|md|json|xml|yml|yaml|csv|log)$/i.test(name)) return "bi bi-file-text text-secondary";
-      if (/\.(js|ts|vue|php|py|rb|java|c|cpp|cs|go|rs)$/i.test(name)) return "bi bi-file-code text-secondary";
-      if (/\.(mp4|mkv|mov|avi|webm)$/i.test(name)) return "bi bi-file-play text-muted";
-      if (/\.(mp3|wav|m4a|flac)$/i.test(name)) return "bi bi-file-music text-muted";
-      return "bi bi-file-earmark text-secondary";
+      if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(name)) return "bi bi-file-image-fill";
+      if (name.endsWith(".pdf")) return "bi bi-file-pdf-fill";
+      if (/\.(doc|docx)$/i.test(name)) return "bi bi-file-word-fill";
+      if (/\.(xls|xlsx)$/i.test(name)) return "bi bi-file-excel-fill";
+      if (/\.(ppt|pptx)$/i.test(name)) return "bi bi-file-ppt-fill";
+      if (/\.(txt|md|json|xml|yml|yaml|csv|log)$/i.test(name)) return "bi bi-file-text-fill";
+      if (/\.(js|ts|vue|php|py|rb|java|c|cpp|cs|go|rs)$/i.test(name)) return "bi bi-file-code-fill";
+      if (/\.(mp4|mkv|mov|avi|webm)$/i.test(name)) return "bi bi-file-play-fill";
+      if (/\.(mp3|wav|m4a|flac)$/i.test(name)) return "bi bi-file-music-fill";
+      return "bi bi-file-earmark-fill";
+    },
+    getIconColor: function getIconColor(item) {
+      if (item.folder) return "#f59e0b";
+      var name = (item.name || "").toLowerCase();
+      if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)$/i.test(name)) return "#06b6d4";
+      if (name.endsWith(".pdf")) return "#ef4444";
+      if (/\.(doc|docx)$/i.test(name)) return "#3b82f6";
+      if (/\.(xls|xlsx)$/i.test(name)) return "#22c55e";
+      if (/\.(ppt|pptx)$/i.test(name)) return "#f97316";
+      if (/\.(mp4|mkv|mov|avi|webm)$/i.test(name)) return "#a855f7";
+      if (/\.(mp3|wav|m4a|flac)$/i.test(name)) return "#ec4899";
+      return "#64748b";
     },
     // ------------ Path helpers ------------
     normalizeFromParent: function normalizeFromParent(parentPath) {
@@ -28603,7 +28663,6 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               path = _arguments.length > 0 && _arguments[0] !== undefined ? _arguments[0] : "/";
               _context.p = 1;
               _this2.loading = true;
-              // ✅ FIX: use /files (not /list)
               _context.n = 2;
               return axios__WEBPACK_IMPORTED_MODULE_0__["default"].get("".concat(_this2.API_BASE, "/files"), {
                 params: {
@@ -28657,7 +28716,6 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                         form = new FormData();
                         form.append("file", f);
                         form.append("path", _this3.currentPath || "/");
-                        // ✅ FIX: keep old /upload route
                         _context2.n = 1;
                         return axios__WEBPACK_IMPORTED_MODULE_0__["default"].post("".concat(_this3.API_BASE, "/upload"), form, {
                           headers: {
@@ -28676,7 +28734,7 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             case 2:
               _this3.toastOk("Upload complete");
               _this3.fetchFiles(_this3.currentPath);
-              event.target.value = ""; // reset
+              event.target.value = "";
               _context3.n = 4;
               break;
             case 3:
@@ -28710,7 +28768,6 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             case 1:
               _context4.p = 1;
               _this4.loading = true;
-              // ✅ FIX: use /folder (not /create-folder)
               _context4.n = 2;
               return axios__WEBPACK_IMPORTED_MODULE_0__["default"].post("".concat(_this4.API_BASE, "/folder"), {
                 name: name,
@@ -28834,6 +28891,46 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   name: "HomePage",
+  data: function data() {
+    return {
+      features: [{
+        icon: "bi bi-lightning-charge-fill",
+        title: "Lightning Fast",
+        description: "Access and manage files across all your clouds instantly with zero lag.",
+        color: "#f59e0b"
+      }, {
+        icon: "bi bi-shield-lock-fill",
+        title: "Bank-Grade Security",
+        description: "End-to-end encryption keeps your data safe across every cloud provider.",
+        color: "#22c55e"
+      }, {
+        icon: "bi bi-cloud-fill",
+        title: "Multi-Cloud Unified",
+        description: "One dashboard for Google Drive, OneDrive, and more — beautifully unified.",
+        color: "#3b82f6"
+      }, {
+        icon: "bi bi-arrow-repeat",
+        title: "Real-Time Sync",
+        description: "Changes sync automatically across all connected storage providers.",
+        color: "#06b6d4"
+      }],
+      providers: [{
+        name: "Google Drive",
+        description: "Browse, upload, and manage your Google Drive files seamlessly.",
+        icon: "fab fa-google-drive",
+        route: "/gdrive",
+        gradient: "linear-gradient(135deg, #4285f4, #34a853)",
+        iconColor: "#4285f4"
+      }, {
+        name: "OneDrive",
+        description: "Full file management for your Microsoft OneDrive storage.",
+        imgSrc: "/images/onedrvie.png",
+        route: "/odrive",
+        gradient: "linear-gradient(135deg, #0078d4, #00bcf2)",
+        iconColor: "#0078d4"
+      }]
+    };
+  },
   methods: {
     goTo: function goTo(route) {
       this.$router.push(route);
@@ -28868,7 +28965,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       var Component = _ref.Component,
         route = _ref.route;
       return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
-        name: "effect",
+        name: "page",
         mode: "out-in"
       }, {
         "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
@@ -28899,68 +28996,135 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
 var _hoisted_1 = {
-  "class": "container mt-4"
+  "class": "drive-layout"
 };
 var _hoisted_2 = {
-  "class": "mb-3 d-flex text-white"
+  "class": "drive-sidebar"
 };
 var _hoisted_3 = {
-  "class": "row g-3"
+  "class": "sidebar-nav"
 };
-var _hoisted_4 = ["onDblclick"];
+var _hoisted_4 = {
+  "class": "drive-main"
+};
 var _hoisted_5 = {
-  "class": "mt-2 small text-truncate fw-semibold"
+  "class": "drive-topbar"
 };
 var _hoisted_6 = {
+  "class": "topbar-left"
+};
+var _hoisted_7 = {
+  "class": "topbar-title"
+};
+var _hoisted_8 = {
+  "class": "topbar-right"
+};
+var _hoisted_9 = {
+  "class": "search-wrapper"
+};
+var _hoisted_10 = {
   key: 0,
-  "class": "text-center py-4"
+  "class": "drive-loading"
+};
+var _hoisted_11 = {
+  "class": "files-grid"
+};
+var _hoisted_12 = ["onDblclick"];
+var _hoisted_13 = ["title"];
+var _hoisted_14 = {
+  "class": "file-type"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "d-flex align-items-center justify-content-between mb-3 text-white"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fab fa-google-drive text-success"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Google Drive Browser ")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: "/auth/google",
-    "class": "btn btn-danger reconnect-btn"
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== SIDEBAR ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", _hoisted_2, [_cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "sidebar-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fas fa-sync-alt"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Connect / Reconnect ")])], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Search & Back "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [$data.folderStack.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    "class": "bi bi-google",
+    style: {
+      "color": "#4285f4"
+    }
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Google Drive")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("nav", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["sidebar-item", {
+      active: $data.activeSection === 'mydrive'
+    }]),
+    onClick: _cache[0] || (_cache[0] = function ($event) {
+      return $options.sidebarNavigate('mydrive');
+    })
+  }, _cache[4] || (_cache[4] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-hdd"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "My Drive", -1 /* CACHED */)]), 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["sidebar-item", {
+      active: $data.activeSection === 'shared'
+    }]),
+    onClick: _cache[1] || (_cache[1] = function ($event) {
+      return $options.sidebarNavigate('shared');
+    })
+  }, _cache[5] || (_cache[5] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-people"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Shared with Me", -1 /* CACHED */)]), 2 /* CLASS */), _cache[6] || (_cache[6] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "sidebar-item",
+    disabled: ""
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-trash3"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Trash")], -1 /* CACHED */))]), _cache[8] || (_cache[8] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "sidebar-divider"
+  }, null, -1 /* CACHED */)), _cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "sidebar-footer"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: "/auth/google",
+    "class": "connect-btn"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-plug"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Connect / Reconnect")])], -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== MAIN CONTENT ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Top Bar "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [$data.folderStack.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
-    onClick: _cache[0] || (_cache[0] = function () {
+    onClick: _cache[2] || (_cache[2] = function () {
       return $options.goBack && $options.goBack.apply($options, arguments);
     }),
-    "class": "btn btn-secondary btn-sm me-2"
-  }, _cache[2] || (_cache[2] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fas fa-arrow-left"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Back ", -1 /* CACHED */)]))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "onUpdate:modelValue": _cache[1] || (_cache[1] = function ($event) {
+    "class": "back-btn"
+  }, _cache[10] || (_cache[10] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-left"
+  }, null, -1 /* CACHED */)]))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", _hoisted_7, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.currentFolderName), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [_cache[11] || (_cache[11] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-search search-icon"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) {
       return $data.q = $event;
     }),
-    "class": "form-control inputs text-white",
-    placeholder: "🔍 Search by name..."
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.q]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Files Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.filtered, function (f, i) {
+    type: "text",
+    "class": "search-input",
+    placeholder: "Search files..."
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.q]])])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Loading State "), $data.loading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_10, _cache[12] || (_cache[12] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "loading-spinner"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading files...", -1 /* CACHED */)]))) : $options.filtered.length === 0 && !$data.loading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 1
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), _cache[13] || (_cache[13] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "drive-empty"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "empty-icon"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-folder2-open"
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "No files found"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "This folder is empty or no files match your search.")], -1 /* CACHED */))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 2
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Files Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.filtered, function (f, i) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: f.id,
-      "class": "col-6 col-md-3"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "card h-100 p-3 text-center shadow-sm border-0",
-      style: {
-        "cursor": "pointer",
-        "border-radius": "10px"
-      },
+      "class": "file-card",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        animationDelay: i * 0.03 + 's'
+      }),
       onDblclick: function onDblclick($event) {
         return $options.openItem(f);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Icon "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($options.getFileIcon(f)),
-      style: {
-        "font-size": "40px"
-      }
-    }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Name "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(f.name), 1 /* TEXT */)], 40 /* PROPS, NEED_HYDRATION */, _hoisted_4)]);
-  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Loader "), $data.loading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, _cache[3] || (_cache[3] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fas fa-spinner fa-spin"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Loading… ", -1 /* CACHED */)]))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "file-icon",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        color: $options.getIconColor(f)
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($options.getFileIcon(f))
+    }, null, 2 /* CLASS */)], 4 /* STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "file-name",
+      title: f.name
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(f.name), 9 /* TEXT, PROPS */, _hoisted_13), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(f.isFolder ? 'Folder' : (f.name || '').split('.').pop().toUpperCase()), 1 /* TEXT */)], 44 /* STYLE, PROPS, NEED_HYDRATION */, _hoisted_12);
+  }), 128 /* KEYED_FRAGMENT */))])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))])]);
 }
 
 /***/ }),
@@ -28979,83 +29143,99 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
 var _hoisted_1 = {
-  "class": "navbar navbar-expand-lg navbar-dark bg-dark"
+  "class": "nav-container"
 };
-var _hoisted_2 = {
-  "class": "container-fluid"
-};
+var _hoisted_2 = ["aria-label"];
 var _hoisted_3 = {
-  "class": "navbar-nav"
-};
-var _hoisted_4 = {
-  "class": "nav-item"
-};
-var _hoisted_5 = {
-  "class": "nav-item"
-};
-var _hoisted_6 = {
-  "class": "nav-item"
+  "class": "nav-links"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_router_link = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("router-link");
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("nav", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("nav", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["nav-bar", {
+      'nav-scrolled': $data.scrolled
+    }])
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" LEFT: Logo "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
     "class": "navbar-brand",
-    to: "/"
+    to: "/",
+    onClick: $options.closeNavbar
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return _cache[1] || (_cache[1] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("img", {
-        src: "/images/logo.png",
-        alt: "Logo",
-        style: {
-          "height": "50px",
-          "border-radius": "20%",
-          "margin-right": "5px"
-        }
-      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" FileFusion ", -1 /* CACHED */)]);
+      return _cache[2] || (_cache[2] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": "logo-wrapper"
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("img", {
+        src: "/images/logo-icon.png",
+        alt: "FileFusion Logo",
+        "class": "logo"
+      })], -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+        "class": "brand-text"
+      }, "FileFusion", -1 /* CACHED */)]);
     }),
     _: 1 /* STABLE */,
-    __: [1]
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "navbar-toggler",
-    type: "button",
+    __: [2]
+  }, 8 /* PROPS */, ["onClick"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" MOBILE TOGGLE "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "menu-btn",
     onClick: _cache[0] || (_cache[0] = function () {
       return $options.toggleNavbar && $options.toggleNavbar.apply($options, arguments);
-    })
-  }, _cache[2] || (_cache[2] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "navbar-toggler-icon"
-  }, null, -1 /* CACHED */)])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["collapse navbar-collapse", {
-      show: $data.isNavbarOpen
-    }]),
-    id: "navbarNav"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
-    "class": "nav-link active",
-    to: "/home"
-  }, {
-    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return _cache[3] || (_cache[3] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("Home", -1 /* CACHED */)]);
     }),
-    _: 1 /* STABLE */,
-    __: [3]
-  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+    "aria-label": $data.isNavbarOpen ? 'Close menu' : 'Open menu'
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["hamburger", {
+      active: $data.isNavbarOpen
+    }])
+  }, _cache[3] || (_cache[3] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, null, -1 /* CACHED */)]), 2 /* CLASS */)], 8 /* PROPS */, _hoisted_2), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" CENTER + RIGHT "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["nav-content", {
+      open: $data.isNavbarOpen
+    }])
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" LINKS "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+    to: "/home",
     "class": "nav-link",
-    to: "/gdrive"
+    onClick: $options.closeNavbar
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return _cache[4] || (_cache[4] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("GoogleDrive", -1 /* CACHED */)]);
+      return _cache[4] || (_cache[4] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": "bi bi-house-door"
+      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Home", -1 /* CACHED */)]);
     }),
     _: 1 /* STABLE */,
     __: [4]
-  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+  }, 8 /* PROPS */, ["onClick"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+    to: "/gdrive",
     "class": "nav-link",
-    to: "/odrive"
+    onClick: $options.closeNavbar
   }, {
     "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return _cache[5] || (_cache[5] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)("OneDrive", -1 /* CACHED */)]);
+      return _cache[5] || (_cache[5] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": "bi bi-google"
+      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Google Drive", -1 /* CACHED */)]);
     }),
     _: 1 /* STABLE */,
     __: [5]
-  })])])], 2 /* CLASS */)])]);
+  }, 8 /* PROPS */, ["onClick"])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_router_link, {
+    to: "/odrive",
+    "class": "nav-link",
+    onClick: $options.closeNavbar
+  }, {
+    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+      return _cache[6] || (_cache[6] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": "bi bi-cloud"
+      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "OneDrive", -1 /* CACHED */)]);
+    }),
+    _: 1 /* STABLE */,
+    __: [6]
+  }, 8 /* PROPS */, ["onClick"])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" RIGHT SIDE ACTIONS "), _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "nav-actions"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "login-btn"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-box-arrow-in-right"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Login")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Future: user avatar "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"avatar-placeholder\">\n                        <span>A</span>\n                    </div> ")], -1 /* CACHED */))], 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Mobile overlay "), $data.isNavbarOpen ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+    key: 0,
+    "class": "nav-overlay",
+    onClick: _cache[1] || (_cache[1] = function () {
+      return $options.closeNavbar && $options.closeNavbar.apply($options, arguments);
+    })
+  })) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 2 /* CLASS */);
 }
 
 /***/ }),
@@ -29080,233 +29260,262 @@ function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 
 var _hoisted_1 = {
-  "class": "explorer-container"
+  "class": "onedrive-layout"
 };
 var _hoisted_2 = {
-  "class": "toolbar d-flex flex-wrap gap-2 justify-content-between align-items-center p-3 text-white shadow animate-slide-up"
+  "class": "od-sidebar"
 };
 var _hoisted_3 = {
-  "class": "d-flex gap-2 align-items-center"
+  "class": "sidebar-nav"
 };
 var _hoisted_4 = {
-  "aria-label": "breadcrumb text-white",
-  "class": "ms-2"
+  "class": "od-main"
 };
 var _hoisted_5 = {
-  "class": "breadcrumb mb-0"
+  "class": "od-topbar"
 };
 var _hoisted_6 = {
-  key: 1
+  "class": "topbar-left"
 };
-var _hoisted_7 = ["onClick"];
-var _hoisted_8 = {
-  key: 1
+var _hoisted_7 = {
+  key: 1,
+  "class": "od-breadcrumbs"
 };
+var _hoisted_8 = ["onClick"];
 var _hoisted_9 = {
-  "class": "d-flex flex-wrap gap-2 align-items-center"
+  key: 2,
+  "class": "topbar-title"
 };
 var _hoisted_10 = {
-  "class": "custom-file-upload",
-  style: {
-    "display": "inline-block",
-    "position": "relative"
-  }
+  "class": "topbar-right"
 };
 var _hoisted_11 = {
-  key: 0,
-  "class": "empty-state text-white-50 text-center py-5"
+  "class": "search-wrapper"
 };
 var _hoisted_12 = {
-  "class": "row g-3"
+  "class": "topbar-actions"
 };
-var _hoisted_13 = ["onDblclick"];
-var _hoisted_14 = {
-  "class": "file-icon-wrap mb-2"
-};
-var _hoisted_15 = ["title"];
-var _hoisted_16 = {
+var _hoisted_13 = {
   key: 0,
-  "class": "text-muted small"
+  "class": "od-loading"
 };
+var _hoisted_14 = {
+  "class": "files-grid"
+};
+var _hoisted_15 = ["onDblclick"];
+var _hoisted_16 = ["title"];
 var _hoisted_17 = {
-  "class": "file-actions mt-3 d-flex justify-content-center gap-2"
+  key: 0,
+  "class": "file-meta"
 };
-var _hoisted_18 = ["onClick"];
-var _hoisted_19 = ["onClick"];
-var _hoisted_20 = ["onClick"];
-var _hoisted_21 = {
+var _hoisted_18 = {
   key: 1,
-  "class": "loading-overlay"
+  "class": "file-meta"
 };
-var _hoisted_22 = {
-  key: 2,
+var _hoisted_19 = {
+  "class": "file-actions"
+};
+var _hoisted_20 = ["onClick"];
+var _hoisted_21 = ["onClick"];
+var _hoisted_22 = ["onClick"];
+var _hoisted_23 = {
+  key: 0,
   "class": "toast-wrap"
 };
-var _hoisted_23 = {
+var _hoisted_24 = {
   "class": "preview-modal"
 };
-var _hoisted_24 = {
-  "class": "d-flex justify-content-between align-items-center mb-2"
-};
 var _hoisted_25 = {
-  "class": "fw-semibold text-truncate"
+  "class": "preview-header"
 };
-var _hoisted_26 = ["src"];
-var _hoisted_27 = {
+var _hoisted_26 = {
+  "class": "preview-title"
+};
+var _hoisted_27 = ["src"];
+var _hoisted_28 = {
   key: 1,
-  "class": "text-center py-4 text-muted"
+  "class": "preview-unavailable"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  var _$data$previewItem;
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Header "), _cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "explorer-header text-center text-white py-4 animate-fade-in"
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
-    "class": "fw-bold m-0 d-flex align-items-center justify-content-center"
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== SIDEBAR ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("aside", _hoisted_2, [_cache[10] || (_cache[10] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "sidebar-header"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("img", {
     src: "/images/onedrvie.png",
     alt: "OneDrive",
-    width: "50",
-    height: "40",
-    "class": "me-2"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" My OneDrive ")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
-    "class": "mb-0 opacity-75"
-  }, "Manage your files with ease")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toolbar "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "btn btn-primary",
+    "class": "sidebar-logo"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "OneDrive")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("nav", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "sidebar-item active",
     onClick: _cache[0] || (_cache[0] = function () {
       return $options.goHome && $options.goHome.apply($options, arguments);
     })
-  }, "🏠 Home"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Breadcrumbs "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("nav", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ol", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("li", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["breadcrumb-item", {
-      active: $options.pathSegments.length === 0
-    }])
-  }, [$options.pathSegments.length ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("a", {
+  }, _cache[8] || (_cache[8] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-hdd"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "My Files", -1 /* CACHED */)])), _cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<button class=\"sidebar-item\" disabled data-v-1d2dc3a2><i class=\"bi bi-people\" data-v-1d2dc3a2></i><span data-v-1d2dc3a2>Shared</span></button><button class=\"sidebar-item\" disabled data-v-1d2dc3a2><i class=\"bi bi-clock-history\" data-v-1d2dc3a2></i><span data-v-1d2dc3a2>Recent</span></button><button class=\"sidebar-item\" disabled data-v-1d2dc3a2><i class=\"bi bi-trash3\" data-v-1d2dc3a2></i><span data-v-1d2dc3a2>Trash</span></button>", 3))]), _cache[11] || (_cache[11] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "sidebar-divider"
+  }, null, -1 /* CACHED */)), _cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "sidebar-footer"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: "/auth/onedrive",
+    "class": "connect-btn"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-plug"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Connect / Reconnect")])], -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== MAIN CONTENT ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("main", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Top Bar "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [$options.pathSegments.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
     key: 0,
-    href: "#",
-    onClick: _cache[1] || (_cache[1] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+    "class": "back-btn",
+    onClick: _cache[1] || (_cache[1] = function () {
       return $options.goHome && $options.goHome.apply($options, arguments);
-    }, ["prevent"]))
-  }, "root")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_6, "root"))], 2 /* CLASS */), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.pathSegments, function (seg, idx) {
-    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
-      key: idx,
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["breadcrumb-item", {
-        active: idx === $options.pathSegments.length - 1
-      }])
-    }, [idx !== $options.pathSegments.length - 1 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("a", {
-      key: 0,
-      href: "#",
-      onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
-        return $options.goToCrumb(idx);
-      }, ["prevent"])
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(seg), 9 /* TEXT, PROPS */, _hoisted_7)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span", _hoisted_8, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(seg), 1 /* TEXT */))], 2 /* CLASS */);
-  }), 128 /* KEYED_FRAGMENT */))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Right tools "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
-    "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) {
+    })
+  }, _cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-left"
+  }, null, -1 /* CACHED */)]))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.pathSegments.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("nav", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "crumb",
+    onClick: _cache[2] || (_cache[2] = function () {
+      return $options.goHome && $options.goHome.apply($options, arguments);
+    })
+  }, "Root"), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.pathSegments, function (seg, idx) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+      key: idx
+    }, [_cache[14] || (_cache[14] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-chevron-right crumb-sep"
+    }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["crumb", {
+        'crumb-active': idx === $options.pathSegments.length - 1
+      }]),
+      onClick: function onClick($event) {
+        return idx !== $options.pathSegments.length - 1 && $options.goToCrumb(idx);
+      }
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(seg), 11 /* TEXT, CLASS, PROPS */, _hoisted_8)], 64 /* STABLE_FRAGMENT */);
+  }), 128 /* KEYED_FRAGMENT */))])) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("h2", _hoisted_9, "My Files"))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_11, [_cache[15] || (_cache[15] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-search search-icon"
+  }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) {
       return $data.query = $event;
     }),
     type: "text",
-    "class": "form-control",
-    placeholder: " 🔍 Search files & folders…",
-    style: {
-      "width": "25rem"
-    }
-  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.query]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_10, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Hidden file input "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    "class": "search-input",
+    placeholder: "Search files..."
+  }, null, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $data.query]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [_cache[17] || (_cache[17] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+    "class": "action-btn upload-btn",
+    "for": "odFileInput"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-cloud-arrow-up"
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Upload")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "file",
-    id: "fileInput",
+    id: "odFileInput",
     multiple: "",
-    onChange: _cache[3] || (_cache[3] = function () {
+    onChange: _cache[4] || (_cache[4] = function () {
       return $options.uploadFiles && $options.uploadFiles.apply($options, arguments);
     }),
     style: {
       "display": "none"
     }
-  }, null, 32 /* NEED_HYDRATION */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Custom button "), _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-    "for": "fileInput",
-    "class": "btn btn-primary",
-    style: {
-      "width": "150px",
-      "text-align": "center",
-      "cursor": "pointer"
-    }
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fa-solid fa-upload"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Uploads ")], -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "btn btn-success",
-    onClick: _cache[4] || (_cache[4] = function () {
+  }, null, 32 /* NEED_HYDRATION */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "action-btn",
+    onClick: _cache[5] || (_cache[5] = function () {
       return $options.createFolderPrompt && $options.createFolderPrompt.apply($options, arguments);
     })
-  }, _cache[8] || (_cache[8] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fa-solid fa-plus"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" New Folder ", -1 /* CACHED */)])), _cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-    href: "/auth/onedrive",
-    "class": "btn btn-danger reconnect-btn"
+  }, _cache[16] || (_cache[16] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-folder-plus"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "New Folder", -1 /* CACHED */)]))])])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Loading State "), $data.loading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_13, _cache[18] || (_cache[18] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "loading-spinner"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Loading files...", -1 /* CACHED */)]))) : $options.filteredFiles.length === 0 && !$data.loading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 1
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty State "), _cache[19] || (_cache[19] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "od-empty"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "empty-icon"
   }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fas fa-sync-alt"
-  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Connect / Reconnect ")], -1 /* CACHED */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Empty / Error states "), !$data.loading && $options.filteredFiles.length === 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_11, _cache[10] || (_cache[10] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "bi bi-inboxes fs-1 d-block mb-2"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "fs-5"
-  }, "No items found here.", -1 /* CACHED */)]))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.filteredFiles, function (item) {
+    "class": "bi bi-folder2-open"
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "No items found"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "This folder is empty or no files match your search.")], -1 /* CACHED */))], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, {
+    key: 2
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Files Grid "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($options.filteredFiles, function (item, i) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
       key: item.id,
-      "class": "col-12 col-sm-6 col-md-4 col-lg-3"
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "file-card shadow-sm p-3 rounded text-center animate-pop",
+      "class": "file-card",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        animationDelay: i * 0.03 + 's'
+      }),
       onDblclick: function onDblclick($event) {
         return $options.openItem(item);
       }
-    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ✅ Hamesha icon hi dikhana hai "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)([$options.fileIcon(item), "fs-1"])
-    }, null, 2 /* CLASS */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-      "class": "file-name text-truncate fw-semibold",
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "file-icon",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        color: $options.getIconColor(item)
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($options.fileIcon(item))
+    }, null, 2 /* CLASS */)], 4 /* STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "file-name",
       title: item.name
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.name), 9 /* TEXT, PROPS */, _hoisted_15), !item.folder && $options.humanSize(item.size) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_16, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.humanSize(item.size)), 1 /* TEXT */)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Actions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_17, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-      "class": "btn btn-sm btn-outline-success",
-      title: "Open / Preview",
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(item.name), 9 /* TEXT, PROPS */, _hoisted_16), !item.folder && $options.humanSize(item.size) ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_17, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($options.humanSize(item.size)), 1 /* TEXT */)) : item.folder ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_18, "Folder")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Actions "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_19, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      "class": "file-action-btn",
+      title: "Preview",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.preview(item);
       }, ["stop"])
-    }, _toConsumableArray(_cache[11] || (_cache[11] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    }, _toConsumableArray(_cache[20] || (_cache[20] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
       "class": "bi bi-eye"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_18), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-      "class": "btn btn-sm btn-outline-primary",
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_20), !item.folder ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+      key: 0,
+      "class": "file-action-btn",
       title: "Download",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.download(item);
       }, ["stop"])
-    }, _toConsumableArray(_cache[12] || (_cache[12] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": "bi bi-arrow-down-circle"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_19), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-      "class": "btn btn-sm btn-outline-danger",
+    }, _toConsumableArray(_cache[21] || (_cache[21] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-download"
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_21)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+      "class": "file-action-btn file-action-danger",
       title: "Delete",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $options.deleteItem(item);
       }, ["stop"])
-    }, _toConsumableArray(_cache[13] || (_cache[13] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-      "class": "bi bi-trash"
-    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_20)])], 40 /* PROPS, NEED_HYDRATION */, _hoisted_13)]);
-  }), 128 /* KEYED_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Loader "), $data.loading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_21, _cache[14] || (_cache[14] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "spinner-border",
-    role: "status"
-  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "mt-2 fw-semibold"
-  }, "Loading…", -1 /* CACHED */)]))) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Toast "), $data.toast.show ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_22, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toast-inner", $data.toast.type])
-  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.toast.message), 3 /* TEXT, CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Preview Modal "), $data.showPreview ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
-    key: 3,
-    "class": "preview-backdrop",
-    onClick: _cache[6] || (_cache[6] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
-      return $options.closePreview && $options.closePreview.apply($options, arguments);
-    }, ["self"]))
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$previewItem = $data.previewItem) === null || _$data$previewItem === void 0 ? void 0 : _$data$previewItem.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
-    "class": "btn btn-sm btn-outline-secondary",
-    onClick: _cache[5] || (_cache[5] = function () {
-      return $options.closePreview && $options.closePreview.apply($options, arguments);
-    })
-  }, " ✕ ")]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Use webUrl for embedded preview (Office online / image render) "), $data.previewUrl ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("iframe", {
-    key: 0,
-    src: $data.previewUrl,
-    "class": "preview-frame",
-    referrerpolicy: "no-referrer"
-  }, null, 8 /* PROPS */, _hoisted_26)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_27, " Preview not available. Try Download. "))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
+    }, _toConsumableArray(_cache[22] || (_cache[22] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-trash3"
+    }, null, -1 /* CACHED */)])), 8 /* PROPS */, _hoisted_22)])], 44 /* STYLE, PROPS, NEED_HYDRATION */, _hoisted_15);
+  }), 128 /* KEYED_FRAGMENT */))])], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== TOAST ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
+    name: "toast"
+  }, {
+    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+      return [$data.toast.show ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_23, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["toast-inner", $data.toast.type])
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)($data.toast.type === 'ok' ? 'bi bi-check-circle' : 'bi bi-exclamation-circle')
+      }, null, 2 /* CLASS */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($data.toast.message), 1 /* TEXT */)], 2 /* CLASS */)])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
+    }),
+    _: 1 /* STABLE */
+  }), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== PREVIEW MODAL ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
+    name: "modal"
+  }, {
+    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+      var _$data$previewItem;
+      return [$data.showPreview ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+        key: 0,
+        "class": "preview-backdrop",
+        onClick: _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function () {
+          return $options.closePreview && $options.closePreview.apply($options, arguments);
+        }, ["self"]))
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_24, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_25, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_26, [_cache[23] || (_cache[23] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": "bi bi-file-earmark"
+      }, null, -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((_$data$previewItem = $data.previewItem) === null || _$data$previewItem === void 0 ? void 0 : _$data$previewItem.name), 1 /* TEXT */)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+        "class": "preview-close",
+        onClick: _cache[6] || (_cache[6] = function () {
+          return $options.closePreview && $options.closePreview.apply($options, arguments);
+        })
+      }, _cache[24] || (_cache[24] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": "bi bi-x-lg"
+      }, null, -1 /* CACHED */)]))]), $data.previewUrl ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("iframe", {
+        key: 0,
+        src: $data.previewUrl,
+        "class": "preview-frame",
+        referrerpolicy: "no-referrer"
+      }, null, 8 /* PROPS */, _hoisted_27)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_28, _cache[25] || (_cache[25] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+        "class": "bi bi-eye-slash"
+      }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Preview not available. Try downloading instead.", -1 /* CACHED */)])))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
+    }),
+    _: 1 /* STABLE */
+  })]);
 }
 
 /***/ }),
@@ -29325,28 +29534,121 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
 var _hoisted_1 = {
-  "class": "dashboard"
+  "class": "home-page"
+};
+var _hoisted_2 = {
+  "class": "hero"
+};
+var _hoisted_3 = {
+  "class": "hero-actions"
+};
+var _hoisted_4 = {
+  "class": "features-section"
+};
+var _hoisted_5 = {
+  "class": "features-grid"
+};
+var _hoisted_6 = {
+  "class": "feature-title"
+};
+var _hoisted_7 = {
+  "class": "feature-desc"
+};
+var _hoisted_8 = {
+  "class": "providers-section"
+};
+var _hoisted_9 = {
+  "class": "providers-grid"
+};
+var _hoisted_10 = ["onClick"];
+var _hoisted_11 = ["src", "alt"];
+var _hoisted_12 = {
+  "class": "provider-info"
+};
+var _hoisted_13 = {
+  "class": "footer-cta"
+};
+var _hoisted_14 = {
+  "class": "cta-card"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "card",
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== HERO SECTION ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_2, [_cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"hero-badge\" data-v-b3c5cf30><i class=\"bi bi-stars\" data-v-b3c5cf30></i><span data-v-b3c5cf30>Multi-Cloud Storage Platform</span></div><h1 class=\"hero-title\" data-v-b3c5cf30> Manage All Your Cloud <br data-v-b3c5cf30><span class=\"hero-title-accent\" data-v-b3c5cf30>Storage in One Place</span></h1><p class=\"hero-subtitle\" data-v-b3c5cf30> Connect Google Drive, OneDrive and manage all your files seamlessly. One powerful dashboard for all your cloud storage needs. </p>", 3)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     onClick: _cache[0] || (_cache[0] = function ($event) {
       return $options.goTo('/gdrive');
-    })
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"icon\">☁️</div> "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <i class=\"fab fa-google-drive text-success icon\"></i> "), _cache[2] || (_cache[2] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "fa-brands fa-google-drive icon"
-  }, null, -1 /* CACHED */)), _cache[3] || (_cache[3] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Google Drive", -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-    "class": "card",
+    }),
+    "class": "hero-btn hero-btn-primary"
+  }, _cache[3] || (_cache[3] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-google"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Connect Google Drive ", -1 /* CACHED */)])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
     onClick: _cache[1] || (_cache[1] = function ($event) {
       return $options.goTo('/odrive');
-    })
-  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"icon\">📁</div> "), _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("img", {
-    src: "/images/onedrvie.png",
-    alt: "OneDrive",
-    width: "60",
-    height: "50",
-    "class": "me-2 icon"
-  }, null, -1 /* CACHED */)), _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "One Drive", -1 /* CACHED */))])]);
+    }),
+    "class": "hero-btn hero-btn-secondary"
+  }, _cache[4] || (_cache[4] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-cloud"
+  }, null, -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Connect OneDrive ", -1 /* CACHED */)]))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" Decorative glow orbs "), _cache[6] || (_cache[6] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "hero-glow hero-glow-1"
+  }, null, -1 /* CACHED */)), _cache[7] || (_cache[7] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "hero-glow hero-glow-2"
+  }, null, -1 /* CACHED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== FEATURES SECTION ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_4, [_cache[8] || (_cache[8] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "section-header"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "section-label"
+  }, "Why FileFusion"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    "class": "section-title"
+  }, "Everything you need to manage your files")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.features, function (feature, index) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: index,
+      "class": "feature-card",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        animationDelay: index * 0.08 + 's'
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "feature-icon-wrapper",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        '--accent': feature.color
+      })
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(feature.icon)
+    }, null, 2 /* CLASS */)], 4 /* STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", _hoisted_6, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.title), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", _hoisted_7, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(feature.description), 1 /* TEXT */)], 4 /* STYLE */);
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== CLOUD PROVIDERS SECTION ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_8, [_cache[10] || (_cache[10] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+    "class": "section-header"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "section-label"
+  }, "Cloud Providers"), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", {
+    "class": "section-title"
+  }, "Connect your favorite storage")], -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($data.providers, function (provider, index) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      key: index,
+      "class": "provider-card",
+      onClick: function onClick($event) {
+        return $options.goTo(provider.route);
+      }
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "provider-icon-bg",
+      style: (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)({
+        background: provider.gradient
+      })
+    }, [provider.icon ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", {
+      key: 0,
+      "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(provider.icon)
+    }, null, 2 /* CLASS */)) : provider.imgSrc ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("img", {
+      key: 1,
+      src: provider.imgSrc,
+      alt: provider.name
+    }, null, 8 /* PROPS */, _hoisted_11)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)], 4 /* STYLE */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(provider.name), 1 /* TEXT */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(provider.description), 1 /* TEXT */)]), _cache[9] || (_cache[9] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
+      "class": "provider-arrow"
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+      "class": "bi bi-arrow-right"
+    })], -1 /* CACHED */))], 8 /* PROPS */, _hoisted_10);
+  }), 128 /* KEYED_FRAGMENT */))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" ========== FOOTER CTA ========== "), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("section", _hoisted_13, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_14, [_cache[12] || (_cache[12] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h2", null, "Ready to unify your cloud?", -1 /* CACHED */)), _cache[13] || (_cache[13] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", null, "Join thousands of users managing their files smarter with FileFusion.", -1 /* CACHED */)), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    onClick: _cache[2] || (_cache[2] = function ($event) {
+      return $options.goTo('/gdrive');
+    }),
+    "class": "hero-btn hero-btn-primary"
+  }, _cache[11] || (_cache[11] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Get Started Free ", -1 /* CACHED */), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "bi bi-arrow-right"
+  }, null, -1 /* CACHED */)]))])])]);
 }
 
 /***/ }),
@@ -35955,7 +36257,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, ".app-bg {\n    min-height: calc(100vh - 56px); /* Navbar ke neeche */\n    background: linear-gradient(135deg, #1e293b, #0f172a);\n    padding: 20px;\n    color: #fff;\n}", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "/* ============================================\n   FileFusion – Global Design System\n   ============================================ */\n\n/* ---------- CSS Custom Properties ---------- */\n:root {\n    /* Core palette */\n    --ff-bg-base: #0f172a;\n    --ff-bg-deep: #020617;\n    --ff-surface-1: rgba(255, 255, 255, 0.04);\n    --ff-surface-2: rgba(255, 255, 255, 0.06);\n    --ff-surface-3: rgba(255, 255, 255, 0.08);\n    --ff-surface-hover: rgba(255, 255, 255, 0.10);\n\n    /* Text */\n    --ff-text-primary: #e2e8f0;\n    --ff-text-secondary: #94a3b8;\n    --ff-text-muted: #64748b;\n\n    /* Accent */\n    --ff-accent-blue: #3b82f6;\n    --ff-accent-cyan: #06b6d4;\n    --ff-accent-gradient: linear-gradient(135deg, #3b82f6, #06b6d4);\n    --ff-accent-gradient-hover: linear-gradient(135deg, #2563eb, #0891b2);\n\n    /* Borders */\n    --ff-border-subtle: rgba(255, 255, 255, 0.06);\n    --ff-border-light: rgba(255, 255, 255, 0.08);\n    --ff-border-medium: rgba(255, 255, 255, 0.12);\n    --ff-border-accent: rgba(59, 130, 246, 0.4);\n\n    /* Shadows */\n    --ff-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);\n    --ff-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.2);\n    --ff-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.3);\n    --ff-shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);\n\n    /* Glass */\n    --ff-glass-blur: blur(16px);\n    --ff-glass-bg: rgba(15, 23, 42, 0.75);\n\n    /* Radius */\n    --ff-radius-sm: 8px;\n    --ff-radius-md: 12px;\n    --ff-radius-lg: 16px;\n    --ff-radius-xl: 20px;\n    --ff-radius-2xl: 24px;\n\n    /* Spacing */\n    --ff-nav-height: 64px;\n\n    /* Transitions */\n    --ff-transition-fast: 0.15s ease;\n    --ff-transition-normal: 0.25s ease;\n    --ff-transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);\n}\n\n/* ---------- Global Reset & Base ---------- */\n*, *::before, *::after {\n    box-sizing: border-box;\n}\n\nhtml {\n    scroll-behavior: smooth;\n    -webkit-font-smoothing: antialiased;\n    -moz-osx-font-smoothing: grayscale;\n}\n\nbody {\n    margin: 0;\n    padding: 0;\n    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;\n    background: var(--ff-bg-base);\n    color: var(--ff-text-primary);\n    line-height: 1.6;\n    overflow-x: hidden;\n}\n\n/* ---------- App Background ---------- */\n.app-bg {\n    min-height: 100vh;\n    padding-top: var(--ff-nav-height);\n\n    /* Multi-layer gradient background */\n    background:\n        radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),\n        radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),\n        radial-gradient(ellipse at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 80%),\n        linear-gradient(180deg, #0f172a 0%, #020617 100%);\n\n    color: var(--ff-text-primary);\n}\n\n/* ---------- Scrollbar ---------- */\n::-webkit-scrollbar {\n    width: 6px;\n    height: 6px;\n}\n\n::-webkit-scrollbar-track {\n    background: transparent;\n}\n\n::-webkit-scrollbar-thumb {\n    background: rgba(255, 255, 255, 0.1);\n    border-radius: 3px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n    background: rgba(255, 255, 255, 0.18);\n}\n\n/* ---------- Selection ---------- */\n::-moz-selection {\n    background: rgba(59, 130, 246, 0.3);\n    color: white;\n}\n::selection {\n    background: rgba(59, 130, 246, 0.3);\n    color: white;\n}\n\n/* ---------- Focus (Accessibility) ---------- */\n:focus-visible {\n    outline: 2px solid var(--ff-accent-blue);\n    outline-offset: 2px;\n}\n\n/* ---------- Utility Classes ---------- */\n.ff-glass {\n    background: var(--ff-glass-bg);\n    backdrop-filter: var(--ff-glass-blur);\n    -webkit-backdrop-filter: var(--ff-glass-blur);\n    border: 1px solid var(--ff-border-light);\n}\n\n.ff-card {\n    background: var(--ff-surface-2);\n    backdrop-filter: blur(12px);\n    -webkit-backdrop-filter: blur(12px);\n    border: 1px solid var(--ff-border-light);\n    border-radius: var(--ff-radius-lg);\n    transition: all var(--ff-transition-smooth);\n}\n\n.ff-card:hover {\n    background: var(--ff-surface-hover);\n    border-color: var(--ff-border-accent);\n    box-shadow: var(--ff-shadow-glow);\n    transform: translateY(-4px);\n}\n\n.ff-gradient-text {\n    background: var(--ff-accent-gradient);\n    -webkit-background-clip: text;\n    background-clip: text;\n    -webkit-text-fill-color: transparent;\n}\n\n.ff-btn-primary {\n    background: var(--ff-accent-gradient);\n    border: none;\n    padding: 10px 24px;\n    border-radius: var(--ff-radius-sm);\n    color: white;\n    font-weight: 600;\n    font-size: 14px;\n    cursor: pointer;\n    transition: all var(--ff-transition-normal);\n    font-family: 'Inter', sans-serif;\n}\n\n.ff-btn-primary:hover {\n    background: var(--ff-accent-gradient-hover);\n    transform: translateY(-2px);\n    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);\n}\n\n.ff-btn-secondary {\n    background: var(--ff-surface-2);\n    border: 1px solid var(--ff-border-medium);\n    padding: 10px 24px;\n    border-radius: var(--ff-radius-sm);\n    color: var(--ff-text-primary);\n    font-weight: 500;\n    font-size: 14px;\n    cursor: pointer;\n    transition: all var(--ff-transition-normal);\n    font-family: 'Inter', sans-serif;\n}\n\n.ff-btn-secondary:hover {\n    background: var(--ff-surface-hover);\n    border-color: var(--ff-border-accent);\n    transform: translateY(-2px);\n}\n\n/* ---------- Animations ---------- */\n@keyframes ff-fade-in {\n    from { opacity: 0; transform: translateY(12px); }\n    to   { opacity: 1; transform: translateY(0); }\n}\n\n@keyframes ff-fade-in-up {\n    from { opacity: 0; transform: translateY(24px); }\n    to   { opacity: 1; transform: translateY(0); }\n}\n\n@keyframes ff-scale-in {\n    from { opacity: 0; transform: scale(0.95); }\n    to   { opacity: 1; transform: scale(1); }\n}\n\n@keyframes ff-slide-in-left {\n    from { opacity: 0; transform: translateX(-20px); }\n    to   { opacity: 1; transform: translateX(0); }\n}\n\n@keyframes ff-pulse-glow {\n    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.1); }\n    50%      { box-shadow: 0 0 40px rgba(59, 130, 246, 0.2); }\n}\n\n@keyframes ff-shimmer {\n    0%   { background-position: -200% 0; }\n    100% { background-position: 200% 0; }\n}\n\n.ff-animate-in {\n    animation: ff-fade-in 0.5s ease both;\n}\n\n.ff-stagger-1 { animation-delay: 0.05s; }\n.ff-stagger-2 { animation-delay: 0.1s; }\n.ff-stagger-3 { animation-delay: 0.15s; }\n.ff-stagger-4 { animation-delay: 0.2s; }\n.ff-stagger-5 { animation-delay: 0.25s; }\n.ff-stagger-6 { animation-delay: 0.3s; }\n\n/* ---------- Responsive helpers ---------- */\n@media (max-width: 768px) {\n    .app-bg {\n        padding-top: 56px;\n    }\n    :root {\n        --ff-nav-height: 56px;\n    }\n}", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -35979,7 +36281,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n#router-view {\n    overflow-x: hidden;\n    padding: 0;\n}\n.effect-enter-active,\n.effect-leave-active {\n    transition: 0.5s;\n}\n.effect-leave-to {\n    opacity: 0;\n}\n.effect-enter-from {\n    transform: translateX(-100%);\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* ========== Page Transitions ========== */\n#router-view {\n    overflow-x: hidden;\n    padding: 0;\n    position: relative;\n}\n.page-enter-active {\n    animation: pageEnter 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;\n}\n.page-leave-active {\n    animation: pageLeave 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;\n}\n@keyframes pageEnter {\nfrom {\n        opacity: 0;\n        transform: translateY(16px);\n}\nto {\n        opacity: 1;\n        transform: translateY(0);\n}\n}\n@keyframes pageLeave {\nfrom {\n        opacity: 1;\n        transform: translateY(0);\n}\nto {\n        opacity: 0;\n        transform: translateY(-8px);\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -36003,7 +36305,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.inputs[data-v-6ea1556a] {\n    background: rgba(255, 255, 255, 0.08);\n    border: 1px solid rgba(255, 255, 255, 0.1);\n    color: white;\n}\n.inputs[data-v-6ea1556a]::-moz-placeholder {\n    color: white;\n}\n.inputs[data-v-6ea1556a]::placeholder {\n    color: white;\n}\n.card[data-v-6ea1556a] {\n    background: rgba(255, 255, 255, 0.05);\n    /* glass effect */\n    -webkit-backdrop-filter: blur(10px);\n            backdrop-filter: blur(10px);\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    color: #fff;\n    transition: all 0.25s ease;\n}\n\n/* Hover effect */\n.card[data-v-6ea1556a]:hover {\n    transform: translateY(-5px) scale(1.02);\n    background: rgba(255, 255, 255, 0.08);\n    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);\n}\n\n/* Icon styling */\n.card i[data-v-6ea1556a] {\n    color: #38bdf8;\n    /* soft blue accent */\n}\n\n/* Text */\n.card .small[data-v-6ea1556a] {\n    color: rgba(255, 255, 255, 0.85);\n}\n.reconnect-btn[data-v-6ea1556a] {\n    transition: all 0.25s ease;\n}\n.reconnect-btn[data-v-6ea1556a]:hover {\n    transform: translateY(-1px) scale(1.02);\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* ========== LAYOUT ========== */\n.drive-layout[data-v-6ea1556a] {\n    display: flex;\n    min-height: calc(100vh - var(--ff-nav-height, 64px));\n}\n\n/* ========== SIDEBAR ========== */\n.drive-sidebar[data-v-6ea1556a] {\n    width: 240px;\n    flex-shrink: 0;\n    background: rgba(255, 255, 255, 0.02);\n    border-right: 1px solid rgba(255, 255, 255, 0.06);\n    padding: 24px 14px;\n    display: flex;\n    flex-direction: column;\n    animation: ff-slide-in-left 0.4s ease both;\n}\n.sidebar-header[data-v-6ea1556a] {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    padding: 0 10px 20px;\n    font-size: 16px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    border-bottom: 1px solid rgba(255, 255, 255, 0.06);\n    margin-bottom: 16px;\n}\n.sidebar-header i[data-v-6ea1556a] {\n    font-size: 20px;\n}\n.sidebar-nav[data-v-6ea1556a] {\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n.sidebar-item[data-v-6ea1556a] {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    padding: 10px 14px;\n    border-radius: 10px;\n    border: none;\n    background: transparent;\n    color: var(--ff-text-secondary, #94a3b8);\n    font-size: 14px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    font-family: 'Inter', sans-serif;\n    text-align: left;\n    width: 100%;\n}\n.sidebar-item i[data-v-6ea1556a] {\n    font-size: 17px;\n    width: 20px;\n    text-align: center;\n}\n.sidebar-item[data-v-6ea1556a]:hover:not(:disabled) {\n    background: rgba(255, 255, 255, 0.05);\n    color: var(--ff-text-primary, #e2e8f0);\n}\n.sidebar-item.active[data-v-6ea1556a] {\n    background: rgba(59, 130, 246, 0.1);\n    color: #3b82f6;\n}\n.sidebar-item[data-v-6ea1556a]:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n.sidebar-divider[data-v-6ea1556a] {\n    height: 1px;\n    background: rgba(255, 255, 255, 0.06);\n    margin: 16px 10px;\n}\n.sidebar-footer[data-v-6ea1556a] {\n    margin-top: auto;\n}\n.connect-btn[data-v-6ea1556a] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    padding: 10px 14px;\n    border-radius: 10px;\n    background: rgba(239, 68, 68, 0.08);\n    color: #f87171;\n    font-size: 13px;\n    font-weight: 500;\n    text-decoration: none;\n    transition: all 0.2s ease;\n}\n.connect-btn[data-v-6ea1556a]:hover {\n    background: rgba(239, 68, 68, 0.15);\n    color: #ef4444;\n}\n\n/* ========== MAIN CONTENT ========== */\n.drive-main[data-v-6ea1556a] {\n    flex: 1;\n    min-width: 0;\n    padding: 24px 28px;\n    animation: ff-fade-in 0.4s ease both;\n}\n\n/* ========== TOP BAR ========== */\n.drive-topbar[data-v-6ea1556a] {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 20px;\n    margin-bottom: 28px;\n    flex-wrap: wrap;\n}\n.topbar-left[data-v-6ea1556a] {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n}\n.back-btn[data-v-6ea1556a] {\n    width: 36px;\n    height: 36px;\n    border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-secondary, #94a3b8);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    font-size: 16px;\n}\n.back-btn[data-v-6ea1556a]:hover {\n    background: rgba(255, 255, 255, 0.08);\n    color: var(--ff-text-primary, #e2e8f0);\n    border-color: rgba(255, 255, 255, 0.12);\n}\n.topbar-title[data-v-6ea1556a] {\n    font-size: 22px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0;\n    letter-spacing: -0.3px;\n}\n.topbar-right[data-v-6ea1556a] {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n}\n.search-wrapper[data-v-6ea1556a] {\n    position: relative;\n    width: 280px;\n}\n.search-icon[data-v-6ea1556a] {\n    position: absolute;\n    left: 14px;\n    top: 50%;\n    transform: translateY(-50%);\n    font-size: 14px;\n    color: var(--ff-text-muted, #64748b);\n    pointer-events: none;\n}\n.search-input[data-v-6ea1556a] {\n    width: 100%;\n    padding: 10px 14px 10px 38px;\n    border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-primary, #e2e8f0);\n    font-size: 14px;\n    font-family: 'Inter', sans-serif;\n    transition: all 0.2s ease;\n    outline: none;\n}\n.search-input[data-v-6ea1556a]::-moz-placeholder {\n    color: var(--ff-text-muted, #64748b);\n}\n.search-input[data-v-6ea1556a]::placeholder {\n    color: var(--ff-text-muted, #64748b);\n}\n.search-input[data-v-6ea1556a]:focus {\n    background: rgba(255, 255, 255, 0.06);\n    border-color: rgba(59, 130, 246, 0.4);\n    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);\n}\n\n/* ========== LOADING ========== */\n.drive-loading[data-v-6ea1556a] {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    padding: 80px 20px;\n    color: var(--ff-text-secondary, #94a3b8);\n    gap: 16px;\n    font-size: 14px;\n}\n.loading-spinner[data-v-6ea1556a] {\n    width: 36px;\n    height: 36px;\n    border: 3px solid rgba(255, 255, 255, 0.08);\n    border-top-color: #3b82f6;\n    border-radius: 50%;\n    animation: spin-6ea1556a 0.7s linear infinite;\n}\n@keyframes spin-6ea1556a {\nto { transform: rotate(360deg);\n}\n}\n\n/* ========== EMPTY STATE ========== */\n.drive-empty[data-v-6ea1556a] {\n    text-align: center;\n    padding: 80px 20px;\n    animation: ff-fade-in 0.5s ease both;\n}\n.empty-icon[data-v-6ea1556a] {\n    width: 72px;\n    height: 72px;\n    border-radius: 20px;\n    background: rgba(255, 255, 255, 0.04);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin: 0 auto 20px;\n    font-size: 28px;\n    color: var(--ff-text-muted, #64748b);\n}\n.drive-empty h3[data-v-6ea1556a] {\n    font-size: 18px;\n    font-weight: 600;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0 0 8px;\n}\n.drive-empty p[data-v-6ea1556a] {\n    font-size: 14px;\n    color: var(--ff-text-secondary, #94a3b8);\n    margin: 0;\n}\n\n/* ========== FILES GRID ========== */\n.files-grid[data-v-6ea1556a] {\n    display: grid;\n    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));\n    gap: 14px;\n}\n.file-card[data-v-6ea1556a] {\n    background: rgba(255, 255, 255, 0.03);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    border-radius: 14px;\n    padding: 24px 16px 18px;\n    text-align: center;\n    cursor: pointer;\n    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);\n    animation: ff-scale-in 0.3s ease both;\n}\n.file-card[data-v-6ea1556a]:hover {\n    transform: translateY(-4px);\n    background: rgba(255, 255, 255, 0.06);\n    border-color: rgba(59, 130, 246, 0.25);\n    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);\n}\n.file-icon[data-v-6ea1556a] {\n    font-size: 36px;\n    margin-bottom: 12px;\n    transition: transform 0.2s ease;\n}\n.file-card:hover .file-icon[data-v-6ea1556a] {\n    transform: scale(1.1);\n}\n.file-name[data-v-6ea1556a] {\n    font-size: 13px;\n    font-weight: 600;\n    color: var(--ff-text-primary, #e2e8f0);\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    margin-bottom: 4px;\n}\n.file-type[data-v-6ea1556a] {\n    font-size: 11px;\n    color: var(--ff-text-muted, #64748b);\n    text-transform: uppercase;\n    letter-spacing: 0.5px;\n    font-weight: 500;\n}\n\n/* ========== RESPONSIVE ========== */\n@media (max-width: 900px) {\n.drive-sidebar[data-v-6ea1556a] {\n        display: none;\n}\n.drive-main[data-v-6ea1556a] {\n        padding: 20px 16px;\n}\n.search-wrapper[data-v-6ea1556a] {\n        width: 100%;\n}\n.drive-topbar[data-v-6ea1556a] {\n        flex-direction: column;\n        align-items: stretch;\n        gap: 12px;\n}\n}\n@media (max-width: 480px) {\n.files-grid[data-v-6ea1556a] {\n        grid-template-columns: repeat(2, 1fr);\n        gap: 10px;\n}\n.file-card[data-v-6ea1556a] {\n        padding: 18px 12px 14px;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -36027,7 +36329,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n.navbar-brand[data-v-5dd24bca] {\n    display: flex;\n    align-items: center;\n    color: #0087ff;\n    font-weight: bold;\n        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;\n    margin: 0 0.6rem;\n}\n.navbar-brand[data-v-5dd24bca]:hover {\n    color: #0087ff;\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* ========== NAVBAR BASE ========== */\n.nav-bar[data-v-5dd24bca] {\n    position: fixed;\n    top: 0;\n    left: 0;\n    right: 0;\n    z-index: 1000;\n    height: var(--ff-nav-height, 64px);\n\n    background: rgba(15, 23, 42, 0.6);\n    backdrop-filter: blur(20px);\n    -webkit-backdrop-filter: blur(20px);\n    border-bottom: 1px solid rgba(255, 255, 255, 0.06);\n\n    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n}\n.nav-bar.nav-scrolled[data-v-5dd24bca] {\n    background: rgba(15, 23, 42, 0.85);\n    border-bottom-color: rgba(255, 255, 255, 0.1);\n    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);\n}\n\n/* ========== CONTAINER ========== */\n.nav-container[data-v-5dd24bca] {\n    max-width: 1280px;\n    margin: 0 auto;\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    height: 100%;\n    padding: 0 28px;\n}\n\n/* ========== BRAND ========== */\n.navbar-brand[data-v-5dd24bca] {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    text-decoration: none;\n    flex-shrink: 0;\n    transition: opacity 0.2s ease;\n}\n.navbar-brand[data-v-5dd24bca]:hover {\n    opacity: 0.85;\n}\n.logo-wrapper[data-v-5dd24bca] {\n    width: 36px;\n    height: 36px;\n    border-radius: 10px;\n    overflow: hidden;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    background: rgba(255, 255, 255, 0.05);\n    border: 1px solid rgba(255, 255, 255, 0.08);\n}\n.logo[data-v-5dd24bca] {\n    height: 28px;\n    width: auto;\n    -o-object-fit: contain;\n       object-fit: contain;\n}\n.brand-text[data-v-5dd24bca] {\n    font-size: 20px;\n    font-weight: 700;\n    letter-spacing: -0.3px;\n    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #22d3ee 100%);\n    background-clip: text;\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n}\n\n/* ========== HAMBURGER (MOBILE) ========== */\n.menu-btn[data-v-5dd24bca] {\n    display: none;\n    background: none;\n    border: none;\n    cursor: pointer;\n    padding: 6px;\n    z-index: 10;\n}\n.hamburger[data-v-5dd24bca] {\n    display: flex;\n    flex-direction: column;\n    gap: 5px;\n    width: 22px;\n}\n.hamburger span[data-v-5dd24bca] {\n    display: block;\n    height: 2px;\n    background: var(--ff-text-primary, #e2e8f0);\n    border-radius: 2px;\n    transition: all 0.3s ease;\n    transform-origin: center;\n}\n.hamburger.active span[data-v-5dd24bca]:nth-child(1) {\n    transform: translateY(7px) rotate(45deg);\n}\n.hamburger.active span[data-v-5dd24bca]:nth-child(2) {\n    opacity: 0;\n    transform: scaleX(0);\n}\n.hamburger.active span[data-v-5dd24bca]:nth-child(3) {\n    transform: translateY(-7px) rotate(-45deg);\n}\n\n/* ========== NAV CONTENT ========== */\n.nav-content[data-v-5dd24bca] {\n    display: flex;\n    align-items: center;\n    gap: 32px;\n}\n\n/* ========== LINKS ========== */\n.nav-links[data-v-5dd24bca] {\n    display: flex;\n    list-style: none;\n    gap: 4px;\n    margin: 0;\n    padding: 0;\n}\n.nav-link[data-v-5dd24bca] {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    text-decoration: none;\n    color: var(--ff-text-secondary, #94a3b8);\n    font-size: 14px;\n    font-weight: 500;\n    padding: 8px 14px;\n    border-radius: var(--ff-radius-sm, 8px);\n    transition: all 0.2s ease;\n    position: relative;\n    white-space: nowrap;\n}\n.nav-link i[data-v-5dd24bca] {\n    font-size: 15px;\n    opacity: 0.7;\n    transition: opacity 0.2s ease;\n}\n.nav-link[data-v-5dd24bca]:hover {\n    color: var(--ff-text-primary, #e2e8f0);\n    background: rgba(255, 255, 255, 0.05);\n}\n.nav-link:hover i[data-v-5dd24bca] {\n    opacity: 1;\n}\n\n/* ACTIVE LINK */\n.nav-link.router-link-active[data-v-5dd24bca] {\n    color: #3b82f6;\n    background: rgba(59, 130, 246, 0.1);\n}\n.nav-link.router-link-active i[data-v-5dd24bca] {\n    opacity: 1;\n}\n.nav-link.router-link-active[data-v-5dd24bca]::after {\n    content: \"\";\n    position: absolute;\n    bottom: -1px;\n    left: 50%;\n    transform: translateX(-50%);\n    width: 20px;\n    height: 2px;\n    background: linear-gradient(90deg, #3b82f6, #06b6d4);\n    border-radius: 2px;\n}\n\n/* ========== RIGHT ACTIONS ========== */\n.nav-actions[data-v-5dd24bca] {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n}\n\n/* LOGIN BUTTON */\n.login-btn[data-v-5dd24bca] {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    background: linear-gradient(135deg, #3b82f6, #06b6d4);\n    border: none;\n    padding: 8px 18px;\n    border-radius: var(--ff-radius-sm, 8px);\n    color: white;\n    font-size: 13px;\n    font-weight: 600;\n    cursor: pointer;\n    transition: all 0.25s ease;\n    font-family: 'Inter', sans-serif;\n    letter-spacing: 0.2px;\n}\n.login-btn[data-v-5dd24bca]:hover {\n    transform: translateY(-1px);\n    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);\n    background: linear-gradient(135deg, #2563eb, #0891b2);\n}\n.login-btn[data-v-5dd24bca]:active {\n    transform: translateY(0);\n}\n\n/* AVATAR PLACEHOLDER (for future use) */\n.avatar-placeholder[data-v-5dd24bca] {\n    width: 34px;\n    height: 34px;\n    border-radius: 50%;\n    background: linear-gradient(135deg, #3b82f6, #06b6d4);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    font-size: 14px;\n    font-weight: 700;\n    color: white;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    border: 2px solid transparent;\n}\n.avatar-placeholder[data-v-5dd24bca]:hover {\n    border-color: rgba(59, 130, 246, 0.5);\n    box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);\n}\n\n/* ========== MOBILE OVERLAY ========== */\n.nav-overlay[data-v-5dd24bca] {\n    display: none;\n}\n\n/* ========== MOBILE ========== */\n@media (max-width: 768px) {\n.nav-bar[data-v-5dd24bca] {\n        height: 56px;\n}\n.nav-container[data-v-5dd24bca] {\n        padding: 0 16px;\n}\n.menu-btn[data-v-5dd24bca] {\n        display: flex;\n        align-items: center;\n        justify-content: center;\n}\n.nav-content[data-v-5dd24bca] {\n        position: fixed;\n        top: 0;\n        right: -100%;\n        width: 280px;\n        height: 100vh;\n        flex-direction: column;\n        align-items: stretch;\n        gap: 0;\n        padding: 80px 20px 24px;\n\n        background: rgba(15, 23, 42, 0.97);\n        backdrop-filter: blur(24px);\n        -webkit-backdrop-filter: blur(24px);\n        border-left: 1px solid rgba(255, 255, 255, 0.08);\n\n        transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);\n        z-index: 5;\n}\n.nav-content.open[data-v-5dd24bca] {\n        right: 0;\n}\n.nav-overlay[data-v-5dd24bca] {\n        display: block;\n        position: fixed;\n        inset: 0;\n        background: rgba(0, 0, 0, 0.5);\n        z-index: 4;\n}\n.nav-links[data-v-5dd24bca] {\n        flex-direction: column;\n        gap: 2px;\n}\n.nav-link[data-v-5dd24bca] {\n        padding: 12px 16px;\n        font-size: 15px;\n        border-radius: 10px;\n}\n.nav-actions[data-v-5dd24bca] {\n        margin-top: 24px;\n        padding-top: 20px;\n        border-top: 1px solid rgba(255, 255, 255, 0.08);\n}\n.login-btn[data-v-5dd24bca] {\n        width: 100%;\n        justify-content: center;\n        padding: 12px 18px;\n        font-size: 14px;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -36051,7 +36353,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n/* Page bg */\n.explorer-container[data-v-1d2dc3a2] {\n    min-height: 100vh;\n    padding: 20px;\n}\n\n/* Header glass */\n.explorer-header[data-v-1d2dc3a2] {\n    background: rgba(255, 255, 255, 0.08);\n    border: 1px solid rgba(255, 255, 255, 0.12);\n    border-radius: 16px;\n    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);\n    margin-bottom: 1rem;\n}\n\n/* Toolbar */\n.toolbar[data-v-1d2dc3a2] {\n    color: rgba(255, 255, 255, 0.85);\n    background: rgba(255, 255, 255, 0.03);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    border-radius: 12px;\n    box-shadow: none;\n    padding: 10px 15px;\n    margin-bottom: 1rem;\n}\n.toolbar[data-v-1d2dc3a2]:hover {\n    background: rgba(255, 255, 255, 0.05);\n}\n.toolbar input[data-v-1d2dc3a2] {\n    background: rgba(255, 255, 255, 0.08);\n    border: 1px solid rgba(255, 255, 255, 0.1);\n    color: white;\n}\n.toolbar input[data-v-1d2dc3a2]::-moz-placeholder {\n    color: rgba(255, 255, 255, 0.589);\n}\n.toolbar input[data-v-1d2dc3a2]::placeholder {\n    color: rgba(255, 255, 255, 0.589);\n}\n\n/* Breadcrumbs */\n.breadcrumb[data-v-1d2dc3a2] {\n    background: transparent;\n}\n.breadcrumb-item a[data-v-1d2dc3a2] {\n    color: #fff !important;\n    text-decoration: none;\n}\n.breadcrumb-item.active[data-v-1d2dc3a2] {\n    color: rgba(255, 255, 255, 0.7) !important;\n}\n.breadcrumb-item+.breadcrumb-item[data-v-1d2dc3a2]::before {\n    color: rgba(255, 255, 255, 0.5);\n}\n\n/* File cards */\n.file-card[data-v-1d2dc3a2] {\n    border-radius: 14px;\n    transition: transform 0.18s ease, box-shadow 0.18s ease;\n    cursor: pointer;\n    border: 1px solid #f1f3f7;\n}\n.file-card[data-v-1d2dc3a2]:hover {\n    transform: translateY(-4px);\n    box-shadow: 0 14px 28px rgba(22, 34, 68, 0.12);\n}\n.file-icon-wrap i[data-v-1d2dc3a2] {\n    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));\n}\n.file-name[data-v-1d2dc3a2] {\n    font-size: 14px;\n    white-space: nowrap;\n}\n\n/* Loading overlay */\n.loading-overlay[data-v-1d2dc3a2] {\n    position: fixed;\n    inset: 0;\n    background: rgba(16, 22, 48, 0.22);\n    -webkit-backdrop-filter: blur(2px);\n            backdrop-filter: blur(2px);\n    z-index: 50;\n    color: white;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n}\n\n/* Toast */\n.toast-wrap[data-v-1d2dc3a2] {\n    position: fixed;\n    bottom: 16px;\n    right: 16px;\n    z-index: 60;\n}\n.toast-inner[data-v-1d2dc3a2] {\n    padding: 10px 14px;\n    border-radius: 10px;\n    color: #fff;\n    font-weight: 600;\n    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);\n}\n.toast-inner.ok[data-v-1d2dc3a2] {\n    background: #22bb66;\n}\n.toast-inner.err[data-v-1d2dc3a2] {\n    background: #e05666;\n}\n\n/* Preview modal */\n.preview-backdrop[data-v-1d2dc3a2] {\n    position: fixed;\n    inset: 0;\n    background: rgba(7, 10, 22, 0.55);\n    display: grid;\n    place-items: center;\n    z-index: 70;\n    padding: 24px;\n}\n.preview-modal[data-v-1d2dc3a2] {\n    width: min(1100px, 96vw);\n    height: min(80vh, 900px);\n    background: #fff;\n    border-radius: 14px;\n    padding: 12px;\n    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);\n    display: flex;\n    flex-direction: column;\n}\n.preview-frame[data-v-1d2dc3a2] {\n    flex: 1;\n    width: 100%;\n    border: 0;\n    border-radius: 10px;\n}\n.thumb-preview[data-v-1d2dc3a2] {\n    max-width: 64px;\n    max-height: 64px;\n    border-radius: 8px;\n    -o-object-fit: cover;\n       object-fit: cover;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);\n}\n\n/* Animations */\n.animate-fade-in[data-v-1d2dc3a2] {\n    animation: fadeIn-1d2dc3a2 0.5s ease both;\n}\n.animate-slide-up[data-v-1d2dc3a2] {\n    animation: slideUp-1d2dc3a2 0.4s ease both;\n}\n.animate-pop[data-v-1d2dc3a2] {\n    animation: pop-1d2dc3a2 0.25s ease both;\n}\n@keyframes fadeIn-1d2dc3a2 {\nfrom {\n        opacity: 0;\n        transform: translateY(8px);\n}\nto {\n        opacity: 1;\n        transform: none;\n}\n}\n@keyframes slideUp-1d2dc3a2 {\nfrom {\n        opacity: 0;\n        transform: translateY(10px);\n}\nto {\n        opacity: 1;\n        transform: none;\n}\n}\n@keyframes pop-1d2dc3a2 {\nfrom {\n        opacity: 0;\n        transform: scale(0.98);\n}\nto {\n        opacity: 1;\n        transform: scale(1);\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* ========== LAYOUT ========== */\n.onedrive-layout[data-v-1d2dc3a2] {\n    display: flex;\n    min-height: calc(100vh - var(--ff-nav-height, 64px));\n}\n\n/* ========== SIDEBAR ========== */\n.od-sidebar[data-v-1d2dc3a2] {\n    width: 240px;\n    flex-shrink: 0;\n    background: rgba(255, 255, 255, 0.02);\n    border-right: 1px solid rgba(255, 255, 255, 0.06);\n    padding: 24px 14px;\n    display: flex;\n    flex-direction: column;\n    animation: ff-slide-in-left-1d2dc3a2 0.4s ease both;\n}\n.sidebar-header[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    padding: 0 10px 20px;\n    font-size: 16px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    border-bottom: 1px solid rgba(255, 255, 255, 0.06);\n    margin-bottom: 16px;\n}\n.sidebar-logo[data-v-1d2dc3a2] {\n    width: 24px;\n    height: auto;\n}\n.sidebar-nav[data-v-1d2dc3a2] {\n    display: flex;\n    flex-direction: column;\n    gap: 2px;\n}\n.sidebar-item[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 10px;\n    padding: 10px 14px;\n    border-radius: 10px;\n    border: none;\n    background: transparent;\n    color: var(--ff-text-secondary, #94a3b8);\n    font-size: 14px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    font-family: 'Inter', sans-serif;\n    text-align: left;\n    width: 100%;\n}\n.sidebar-item i[data-v-1d2dc3a2] {\n    font-size: 17px;\n    width: 20px;\n    text-align: center;\n}\n.sidebar-item[data-v-1d2dc3a2]:hover:not(:disabled) {\n    background: rgba(255, 255, 255, 0.05);\n    color: var(--ff-text-primary, #e2e8f0);\n}\n.sidebar-item.active[data-v-1d2dc3a2] {\n    background: rgba(0, 120, 212, 0.12);\n    color: #38bdf8;\n}\n.sidebar-item[data-v-1d2dc3a2]:disabled {\n    opacity: 0.35;\n    cursor: not-allowed;\n}\n.sidebar-divider[data-v-1d2dc3a2] {\n    height: 1px;\n    background: rgba(255, 255, 255, 0.06);\n    margin: 16px 10px;\n}\n.sidebar-footer[data-v-1d2dc3a2] {\n    margin-top: auto;\n}\n.connect-btn[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    padding: 10px 14px;\n    border-radius: 10px;\n    background: rgba(239, 68, 68, 0.08);\n    color: #f87171;\n    font-size: 13px;\n    font-weight: 500;\n    text-decoration: none;\n    transition: all 0.2s ease;\n}\n.connect-btn[data-v-1d2dc3a2]:hover {\n    background: rgba(239, 68, 68, 0.15);\n    color: #ef4444;\n}\n\n/* ========== MAIN CONTENT ========== */\n.od-main[data-v-1d2dc3a2] {\n    flex: 1;\n    min-width: 0;\n    padding: 24px 28px;\n    animation: ff-fade-in-1d2dc3a2 0.4s ease both;\n}\n\n/* ========== TOP BAR ========== */\n.od-topbar[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    gap: 16px;\n    margin-bottom: 28px;\n    flex-wrap: wrap;\n}\n.topbar-left[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    min-width: 0;\n}\n.back-btn[data-v-1d2dc3a2] {\n    width: 36px;\n    height: 36px;\n    border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-secondary, #94a3b8);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    font-size: 16px;\n    flex-shrink: 0;\n}\n.back-btn[data-v-1d2dc3a2]:hover {\n    background: rgba(255, 255, 255, 0.08);\n    color: var(--ff-text-primary, #e2e8f0);\n}\n.topbar-title[data-v-1d2dc3a2] {\n    font-size: 22px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0;\n    letter-spacing: -0.3px;\n}\n\n/* Breadcrumbs */\n.od-breadcrumbs[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 6px;\n    flex-wrap: wrap;\n}\n.crumb[data-v-1d2dc3a2] {\n    font-size: 14px;\n    font-weight: 500;\n    color: var(--ff-text-secondary, #94a3b8);\n    cursor: pointer;\n    transition: color 0.2s ease;\n    padding: 4px 6px;\n    border-radius: 6px;\n}\n.crumb[data-v-1d2dc3a2]:hover:not(.crumb-active) {\n    color: var(--ff-text-primary, #e2e8f0);\n    background: rgba(255, 255, 255, 0.05);\n}\n.crumb-active[data-v-1d2dc3a2] {\n    color: var(--ff-text-primary, #e2e8f0);\n    cursor: default;\n}\n.crumb-sep[data-v-1d2dc3a2] {\n    font-size: 10px;\n    color: var(--ff-text-muted, #64748b);\n}\n.topbar-right[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 12px;\n    flex-wrap: wrap;\n}\n.search-wrapper[data-v-1d2dc3a2] {\n    position: relative;\n    width: 240px;\n}\n.search-icon[data-v-1d2dc3a2] {\n    position: absolute;\n    left: 14px;\n    top: 50%;\n    transform: translateY(-50%);\n    font-size: 14px;\n    color: var(--ff-text-muted, #64748b);\n    pointer-events: none;\n}\n.search-input[data-v-1d2dc3a2] {\n    width: 100%;\n    padding: 10px 14px 10px 38px;\n    border-radius: 10px;\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-primary, #e2e8f0);\n    font-size: 14px;\n    font-family: 'Inter', sans-serif;\n    transition: all 0.2s ease;\n    outline: none;\n}\n.search-input[data-v-1d2dc3a2]::-moz-placeholder {\n    color: var(--ff-text-muted, #64748b);\n}\n.search-input[data-v-1d2dc3a2]::placeholder {\n    color: var(--ff-text-muted, #64748b);\n}\n.search-input[data-v-1d2dc3a2]:focus {\n    background: rgba(255, 255, 255, 0.06);\n    border-color: rgba(59, 130, 246, 0.4);\n    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);\n}\n.topbar-actions[data-v-1d2dc3a2] {\n    display: flex;\n    gap: 8px;\n}\n.action-btn[data-v-1d2dc3a2] {\n    display: inline-flex;\n    align-items: center;\n    gap: 6px;\n    padding: 8px 16px;\n    border-radius: 9px;\n    border: 1px solid rgba(255, 255, 255, 0.1);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-primary, #e2e8f0);\n    font-size: 13px;\n    font-weight: 500;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    font-family: 'Inter', sans-serif;\n}\n.action-btn[data-v-1d2dc3a2]:hover {\n    background: rgba(255, 255, 255, 0.08);\n    border-color: rgba(59, 130, 246, 0.3);\n}\n.upload-btn[data-v-1d2dc3a2] {\n    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.1));\n    border-color: rgba(59, 130, 246, 0.25);\n    color: #60a5fa;\n}\n.upload-btn[data-v-1d2dc3a2]:hover {\n    background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(6, 182, 212, 0.15));\n}\n\n/* ========== LOADING ========== */\n.od-loading[data-v-1d2dc3a2] {\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    padding: 80px 20px;\n    color: var(--ff-text-secondary, #94a3b8);\n    gap: 16px;\n    font-size: 14px;\n}\n.loading-spinner[data-v-1d2dc3a2] {\n    width: 36px;\n    height: 36px;\n    border: 3px solid rgba(255, 255, 255, 0.08);\n    border-top-color: #0078d4;\n    border-radius: 50%;\n    animation: spin-1d2dc3a2 0.7s linear infinite;\n}\n@keyframes spin-1d2dc3a2 {\nto { transform: rotate(360deg);\n}\n}\n\n/* ========== EMPTY STATE ========== */\n.od-empty[data-v-1d2dc3a2] {\n    text-align: center;\n    padding: 80px 20px;\n    animation: ff-fade-in-1d2dc3a2 0.5s ease both;\n}\n.empty-icon[data-v-1d2dc3a2] {\n    width: 72px;\n    height: 72px;\n    border-radius: 20px;\n    background: rgba(255, 255, 255, 0.04);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin: 0 auto 20px;\n    font-size: 28px;\n    color: var(--ff-text-muted, #64748b);\n}\n.od-empty h3[data-v-1d2dc3a2] {\n    font-size: 18px;\n    font-weight: 600;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0 0 8px;\n}\n.od-empty p[data-v-1d2dc3a2] {\n    font-size: 14px;\n    color: var(--ff-text-secondary, #94a3b8);\n    margin: 0;\n}\n\n/* ========== FILES GRID ========== */\n.files-grid[data-v-1d2dc3a2] {\n    display: grid;\n    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));\n    gap: 14px;\n}\n.file-card[data-v-1d2dc3a2] {\n    background: rgba(255, 255, 255, 0.03);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    border-radius: 14px;\n    padding: 24px 16px 16px;\n    text-align: center;\n    cursor: pointer;\n    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);\n    animation: ff-scale-in-1d2dc3a2 0.3s ease both;\n    position: relative;\n}\n.file-card[data-v-1d2dc3a2]:hover {\n    transform: translateY(-4px);\n    background: rgba(255, 255, 255, 0.06);\n    border-color: rgba(0, 120, 212, 0.3);\n    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);\n}\n.file-icon[data-v-1d2dc3a2] {\n    font-size: 36px;\n    margin-bottom: 12px;\n    transition: transform 0.2s ease;\n}\n.file-card:hover .file-icon[data-v-1d2dc3a2] {\n    transform: scale(1.1);\n}\n.file-name[data-v-1d2dc3a2] {\n    font-size: 13px;\n    font-weight: 600;\n    color: var(--ff-text-primary, #e2e8f0);\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    margin-bottom: 4px;\n}\n.file-meta[data-v-1d2dc3a2] {\n    font-size: 11px;\n    color: var(--ff-text-muted, #64748b);\n    text-transform: uppercase;\n    letter-spacing: 0.5px;\n    font-weight: 500;\n    margin-bottom: 8px;\n}\n\n/* File Actions */\n.file-actions[data-v-1d2dc3a2] {\n    display: flex;\n    justify-content: center;\n    gap: 4px;\n    opacity: 0;\n    transition: opacity 0.2s ease;\n}\n.file-card:hover .file-actions[data-v-1d2dc3a2] {\n    opacity: 1;\n}\n.file-action-btn[data-v-1d2dc3a2] {\n    width: 30px;\n    height: 30px;\n    border-radius: 8px;\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-secondary, #94a3b8);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    font-size: 13px;\n}\n.file-action-btn[data-v-1d2dc3a2]:hover {\n    background: rgba(59, 130, 246, 0.12);\n    color: #60a5fa;\n    border-color: rgba(59, 130, 246, 0.3);\n}\n.file-action-danger[data-v-1d2dc3a2]:hover {\n    background: rgba(239, 68, 68, 0.12);\n    color: #f87171;\n    border-color: rgba(239, 68, 68, 0.3);\n}\n\n/* ========== TOAST ========== */\n.toast-wrap[data-v-1d2dc3a2] {\n    position: fixed;\n    bottom: 24px;\n    right: 24px;\n    z-index: 9999;\n}\n.toast-inner[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    padding: 12px 20px;\n    border-radius: 12px;\n    color: white;\n    font-weight: 600;\n    font-size: 14px;\n    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);\n    -webkit-backdrop-filter: blur(12px);\n            backdrop-filter: blur(12px);\n}\n.toast-inner.ok[data-v-1d2dc3a2] {\n    background: linear-gradient(135deg, #22c55e, #16a34a);\n}\n.toast-inner.err[data-v-1d2dc3a2] {\n    background: linear-gradient(135deg, #ef4444, #dc2626);\n}\n.toast-enter-active[data-v-1d2dc3a2],\n.toast-leave-active[data-v-1d2dc3a2] {\n    transition: all 0.3s ease;\n}\n.toast-enter-from[data-v-1d2dc3a2] {\n    opacity: 0;\n    transform: translateY(16px) scale(0.95);\n}\n.toast-leave-to[data-v-1d2dc3a2] {\n    opacity: 0;\n    transform: translateY(-8px) scale(0.95);\n}\n\n/* ========== PREVIEW MODAL ========== */\n.preview-backdrop[data-v-1d2dc3a2] {\n    position: fixed;\n    inset: 0;\n    background: rgba(0, 0, 0, 0.6);\n    -webkit-backdrop-filter: blur(4px);\n            backdrop-filter: blur(4px);\n    display: grid;\n    place-items: center;\n    z-index: 9000;\n    padding: 24px;\n}\n.preview-modal[data-v-1d2dc3a2] {\n    width: min(1100px, 96vw);\n    height: min(80vh, 900px);\n    background: rgba(15, 23, 42, 0.95);\n    -webkit-backdrop-filter: blur(20px);\n            backdrop-filter: blur(20px);\n    border: 1px solid rgba(255, 255, 255, 0.1);\n    border-radius: 18px;\n    display: flex;\n    flex-direction: column;\n    overflow: hidden;\n    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);\n}\n.preview-header[data-v-1d2dc3a2] {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    padding: 16px 20px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.08);\n}\n.preview-title[data-v-1d2dc3a2] {\n    display: flex;\n    align-items: center;\n    gap: 8px;\n    font-weight: 600;\n    font-size: 15px;\n    color: var(--ff-text-primary, #e2e8f0);\n    min-width: 0;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n}\n.preview-close[data-v-1d2dc3a2] {\n    width: 34px;\n    height: 34px;\n    border-radius: 8px;\n    border: 1px solid rgba(255, 255, 255, 0.08);\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-secondary, #94a3b8);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    cursor: pointer;\n    transition: all 0.2s ease;\n    flex-shrink: 0;\n}\n.preview-close[data-v-1d2dc3a2]:hover {\n    background: rgba(239, 68, 68, 0.12);\n    color: #f87171;\n}\n.preview-frame[data-v-1d2dc3a2] {\n    flex: 1;\n    width: 100%;\n    border: 0;\n}\n.preview-unavailable[data-v-1d2dc3a2] {\n    flex: 1;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    color: var(--ff-text-muted, #64748b);\n    gap: 12px;\n}\n.preview-unavailable i[data-v-1d2dc3a2] {\n    font-size: 40px;\n}\n.preview-unavailable p[data-v-1d2dc3a2] {\n    font-size: 14px;\n    margin: 0;\n}\n\n/* Modal animation */\n.modal-enter-active[data-v-1d2dc3a2],\n.modal-leave-active[data-v-1d2dc3a2] {\n    transition: all 0.3s ease;\n}\n.modal-enter-from[data-v-1d2dc3a2] {\n    opacity: 0;\n}\n.modal-enter-from .preview-modal[data-v-1d2dc3a2] {\n    transform: scale(0.95);\n}\n.modal-leave-to[data-v-1d2dc3a2] {\n    opacity: 0;\n}\n\n/* ========== ANIMATIONS ========== */\n@keyframes ff-slide-in-left-1d2dc3a2 {\nfrom { opacity: 0; transform: translateX(-20px);\n}\nto   { opacity: 1; transform: translateX(0);\n}\n}\n@keyframes ff-fade-in-1d2dc3a2 {\nfrom { opacity: 0; transform: translateY(12px);\n}\nto   { opacity: 1; transform: translateY(0);\n}\n}\n@keyframes ff-scale-in-1d2dc3a2 {\nfrom { opacity: 0; transform: scale(0.95);\n}\nto   { opacity: 1; transform: scale(1);\n}\n}\n\n/* ========== RESPONSIVE ========== */\n@media (max-width: 900px) {\n.od-sidebar[data-v-1d2dc3a2] {\n        display: none;\n}\n.od-main[data-v-1d2dc3a2] {\n        padding: 20px 16px;\n}\n.search-wrapper[data-v-1d2dc3a2] {\n        width: 100%;\n}\n.od-topbar[data-v-1d2dc3a2] {\n        flex-direction: column;\n        align-items: stretch;\n        gap: 12px;\n}\n.topbar-right[data-v-1d2dc3a2] {\n        flex-direction: column;\n}\n.topbar-actions[data-v-1d2dc3a2] {\n        width: 100%;\n}\n.action-btn[data-v-1d2dc3a2] {\n        flex: 1;\n        justify-content: center;\n}\n}\n@media (max-width: 480px) {\n.files-grid[data-v-1d2dc3a2] {\n        grid-template-columns: repeat(2, 1fr);\n        gap: 10px;\n}\n.file-card[data-v-1d2dc3a2] {\n        padding: 18px 12px 14px;\n}\n.file-actions[data-v-1d2dc3a2] {\n        opacity: 1;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -36075,7 +36377,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
-___CSS_LOADER_EXPORT___.push([module.id, "\n/* Remove scroll completely */\n.dashboard[data-v-b3c5cf30] {\n    height: calc(100vh - 56px);\n    overflow: hidden;\n\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    grid-template-rows: repeat(2, 1fr);\n\n    gap: 15px;\n    padding: 15px;\n\n    background: linear-gradient(135deg, #1e293b, #0f172a);\n}\n\n/* Compact Card */\n.card[data-v-b3c5cf30] {\n    background: rgba(255, 255, 255, 0.08);\n    border-radius: 15px;\n    color: white;\n    cursor: pointer;\n\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: center;\n\n    transition: 0.3s ease;\n    border: 1px solid rgba(255,255,255,0.1);\n}\n\n/* Smaller icon */\n.icon[data-v-b3c5cf30] {\n    font-size: 40px;\n    margin-bottom: 8px;\n}\n\n/* Smaller text */\n.card h3[data-v-b3c5cf30] {\n    font-size: 16px;\n}\n\n/* Hover */\n.card[data-v-b3c5cf30]:hover {\n    transform: scale(1.05);\n    background: linear-gradient(135deg, #3b82f6, #06b6d4);\n    box-shadow: 0 10px 25px rgba(0,0,0,0.3);\n}\n\n/* Mobile */\n@media (max-width: 768px) {\n.dashboard[data-v-b3c5cf30] {\n        grid-template-columns: 1fr;\n        grid-template-rows: repeat(4, 1fr);\n}\n}\n", ""]);
+___CSS_LOADER_EXPORT___.push([module.id, "\n/* ========== PAGE WRAPPER ========== */\n.home-page[data-v-b3c5cf30] {\n    max-width: 1120px;\n    margin: 0 auto;\n    padding: 0 24px 80px;\n}\n\n/* ========== HERO ========== */\n.hero[data-v-b3c5cf30] {\n    text-align: center;\n    padding: 80px 0 100px;\n    position: relative;\n    overflow: hidden;\n}\n.hero-badge[data-v-b3c5cf30] {\n    display: inline-flex;\n    align-items: center;\n    gap: 6px;\n    background: rgba(59, 130, 246, 0.1);\n    border: 1px solid rgba(59, 130, 246, 0.2);\n    border-radius: 100px;\n    padding: 6px 16px;\n    font-size: 13px;\n    font-weight: 500;\n    color: #60a5fa;\n    margin-bottom: 28px;\n    animation: ff-fade-in 0.5s ease both;\n}\n.hero-badge i[data-v-b3c5cf30] {\n    font-size: 14px;\n}\n.hero-title[data-v-b3c5cf30] {\n    font-size: 52px;\n    font-weight: 800;\n    line-height: 1.15;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0 0 20px;\n    letter-spacing: -1px;\n    animation: ff-fade-in 0.6s ease 0.1s both;\n}\n.hero-title-accent[data-v-b3c5cf30] {\n    background: linear-gradient(135deg, #3b82f6, #06b6d4, #22d3ee);\n    -webkit-background-clip: text;\n    background-clip: text;\n    -webkit-text-fill-color: transparent;\n}\n.hero-subtitle[data-v-b3c5cf30] {\n    color: var(--ff-text-secondary, #94a3b8);\n    font-size: 18px;\n    line-height: 1.7;\n    max-width: 560px;\n    margin: 0 auto 36px;\n    animation: ff-fade-in 0.6s ease 0.2s both;\n}\n.hero-actions[data-v-b3c5cf30] {\n    display: flex;\n    justify-content: center;\n    gap: 14px;\n    flex-wrap: wrap;\n    animation: ff-fade-in 0.6s ease 0.3s both;\n}\n.hero-btn[data-v-b3c5cf30] {\n    display: inline-flex;\n    align-items: center;\n    gap: 8px;\n    padding: 12px 28px;\n    border-radius: 10px;\n    border: none;\n    font-size: 15px;\n    font-weight: 600;\n    cursor: pointer;\n    transition: all 0.25s ease;\n    font-family: 'Inter', sans-serif;\n    letter-spacing: 0.1px;\n}\n.hero-btn-primary[data-v-b3c5cf30] {\n    background: linear-gradient(135deg, #3b82f6, #06b6d4);\n    color: white;\n    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);\n}\n.hero-btn-primary[data-v-b3c5cf30]:hover {\n    transform: translateY(-2px);\n    box-shadow: 0 8px 28px rgba(59, 130, 246, 0.4);\n    background: linear-gradient(135deg, #2563eb, #0891b2);\n}\n.hero-btn-secondary[data-v-b3c5cf30] {\n    background: rgba(255, 255, 255, 0.04);\n    color: var(--ff-text-primary, #e2e8f0);\n    border: 1px solid rgba(255, 255, 255, 0.1);\n}\n.hero-btn-secondary[data-v-b3c5cf30]:hover {\n    background: rgba(255, 255, 255, 0.08);\n    border-color: rgba(59, 130, 246, 0.4);\n    transform: translateY(-2px);\n}\n\n/* Decorative glow orbs */\n.hero-glow[data-v-b3c5cf30] {\n    position: absolute;\n    border-radius: 50%;\n    pointer-events: none;\n    filter: blur(80px);\n}\n.hero-glow-1[data-v-b3c5cf30] {\n    width: 400px;\n    height: 400px;\n    background: rgba(59, 130, 246, 0.12);\n    top: -100px;\n    left: -150px;\n}\n.hero-glow-2[data-v-b3c5cf30] {\n    width: 350px;\n    height: 350px;\n    background: rgba(6, 182, 212, 0.1);\n    bottom: -80px;\n    right: -120px;\n}\n\n/* ========== SECTION HEADERS ========== */\n.section-header[data-v-b3c5cf30] {\n    text-align: center;\n    margin-bottom: 48px;\n}\n.section-label[data-v-b3c5cf30] {\n    display: inline-block;\n    font-size: 13px;\n    font-weight: 600;\n    text-transform: uppercase;\n    letter-spacing: 1.5px;\n    color: #3b82f6;\n    margin-bottom: 10px;\n}\n.section-title[data-v-b3c5cf30] {\n    font-size: 32px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    letter-spacing: -0.5px;\n    margin: 0;\n}\n\n/* ========== FEATURES ========== */\n.features-section[data-v-b3c5cf30] {\n    margin-bottom: 100px;\n}\n.features-grid[data-v-b3c5cf30] {\n    display: grid;\n    grid-template-columns: repeat(4, 1fr);\n    gap: 20px;\n}\n.feature-card[data-v-b3c5cf30] {\n    background: rgba(255, 255, 255, 0.03);\n    backdrop-filter: blur(12px);\n    -webkit-backdrop-filter: blur(12px);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    border-radius: 16px;\n    padding: 32px 24px;\n    text-align: center;\n    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n    animation: ff-fade-in-up 0.5s ease both;\n}\n.feature-card[data-v-b3c5cf30]:hover {\n    transform: translateY(-6px);\n    background: rgba(255, 255, 255, 0.06);\n    border-color: rgba(59, 130, 246, 0.3);\n    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);\n}\n.feature-icon-wrapper[data-v-b3c5cf30] {\n    width: 52px;\n    height: 52px;\n    border-radius: 14px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    margin: 0 auto 18px;\n    background: color-mix(in srgb, var(--accent) 12%, transparent);\n    color: var(--accent);\n    font-size: 22px;\n    transition: transform 0.3s ease;\n}\n.feature-card:hover .feature-icon-wrapper[data-v-b3c5cf30] {\n    transform: scale(1.1);\n}\n.feature-title[data-v-b3c5cf30] {\n    font-size: 16px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0 0 8px;\n}\n.feature-desc[data-v-b3c5cf30] {\n    font-size: 13px;\n    color: var(--ff-text-secondary, #94a3b8);\n    line-height: 1.6;\n    margin: 0;\n}\n\n/* ========== PROVIDERS ========== */\n.providers-section[data-v-b3c5cf30] {\n    margin-bottom: 100px;\n}\n.providers-grid[data-v-b3c5cf30] {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    gap: 20px;\n}\n.provider-card[data-v-b3c5cf30] {\n    display: flex;\n    align-items: center;\n    gap: 20px;\n    background: rgba(255, 255, 255, 0.03);\n    backdrop-filter: blur(12px);\n    -webkit-backdrop-filter: blur(12px);\n    border: 1px solid rgba(255, 255, 255, 0.06);\n    border-radius: 18px;\n    padding: 28px;\n    cursor: pointer;\n    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n    animation: ff-fade-in-up 0.5s ease both;\n}\n.provider-card[data-v-b3c5cf30]:hover {\n    transform: translateY(-4px);\n    background: rgba(255, 255, 255, 0.06);\n    border-color: rgba(59, 130, 246, 0.3);\n    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);\n}\n.provider-icon-bg[data-v-b3c5cf30] {\n    flex-shrink: 0;\n    width: 56px;\n    height: 56px;\n    border-radius: 14px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    transition: transform 0.3s ease;\n}\n.provider-card:hover .provider-icon-bg[data-v-b3c5cf30] {\n    transform: scale(1.08);\n}\n.provider-icon-bg i[data-v-b3c5cf30] {\n    font-size: 26px;\n    color: white;\n}\n.provider-icon-bg img[data-v-b3c5cf30] {\n    width: 32px;\n    height: auto;\n    filter: brightness(0) invert(1);\n}\n.provider-info[data-v-b3c5cf30] {\n    flex: 1;\n    min-width: 0;\n}\n.provider-info h3[data-v-b3c5cf30] {\n    font-size: 17px;\n    font-weight: 700;\n    color: var(--ff-text-primary, #e2e8f0);\n    margin: 0 0 4px;\n}\n.provider-info p[data-v-b3c5cf30] {\n    font-size: 13px;\n    color: var(--ff-text-secondary, #94a3b8);\n    margin: 0;\n    line-height: 1.5;\n}\n.provider-arrow[data-v-b3c5cf30] {\n    flex-shrink: 0;\n    width: 36px;\n    height: 36px;\n    border-radius: 50%;\n    background: rgba(255, 255, 255, 0.05);\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    color: var(--ff-text-muted, #64748b);\n    transition: all 0.3s ease;\n}\n.provider-card:hover .provider-arrow[data-v-b3c5cf30] {\n    background: rgba(59, 130, 246, 0.15);\n    color: #3b82f6;\n    transform: translateX(4px);\n}\n\n/* ========== FOOTER CTA ========== */\n.footer-cta[data-v-b3c5cf30] {\n    padding-bottom: 20px;\n}\n.cta-card[data-v-b3c5cf30] {\n    text-align: center;\n    background: rgba(59, 130, 246, 0.06);\n    border: 1px solid rgba(59, 130, 246, 0.15);\n    border-radius: 24px;\n    padding: 60px 40px;\n    position: relative;\n    overflow: hidden;\n}\n.cta-card[data-v-b3c5cf30]::before {\n    content: \"\";\n    position: absolute;\n    inset: 0;\n    background:\n        radial-gradient(ellipse at 30% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),\n        radial-gradient(ellipse at 70% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 70%);\n    pointer-events: none;\n}\n.cta-card h2[data-v-b3c5cf30] {\n    font-size: 30px;\n    font-weight: 700;\n    margin: 0 0 12px;\n    color: var(--ff-text-primary, #e2e8f0);\n    position: relative;\n}\n.cta-card p[data-v-b3c5cf30] {\n    font-size: 16px;\n    color: var(--ff-text-secondary, #94a3b8);\n    margin: 0 0 28px;\n    position: relative;\n}\n.cta-card .hero-btn[data-v-b3c5cf30] {\n    position: relative;\n}\n\n/* ========== RESPONSIVE ========== */\n@media (max-width: 1024px) {\n.features-grid[data-v-b3c5cf30] {\n        grid-template-columns: repeat(2, 1fr);\n}\n}\n@media (max-width: 768px) {\n.hero[data-v-b3c5cf30] {\n        padding: 48px 0 64px;\n}\n.hero-title[data-v-b3c5cf30] {\n        font-size: 32px;\n}\n.hero-subtitle[data-v-b3c5cf30] {\n        font-size: 16px;\n}\n.hero-actions[data-v-b3c5cf30] {\n        flex-direction: column;\n        align-items: stretch;\n}\n.hero-btn[data-v-b3c5cf30] {\n        justify-content: center;\n}\n.features-grid[data-v-b3c5cf30] {\n        grid-template-columns: 1fr;\n}\n.providers-grid[data-v-b3c5cf30] {\n        grid-template-columns: 1fr;\n}\n.section-title[data-v-b3c5cf30] {\n        font-size: 24px;\n}\n.cta-card[data-v-b3c5cf30] {\n        padding: 40px 24px;\n}\n.cta-card h2[data-v-b3c5cf30] {\n        font-size: 24px;\n}\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 

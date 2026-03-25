@@ -1,6 +1,244 @@
+/* ============================================
+   FileFusion – Global Design System
+   ============================================ */
+
+/* ---------- CSS Custom Properties ---------- */
+:root {
+    /* Core palette */
+    --ff-bg-base: #0f172a;
+    --ff-bg-deep: #020617;
+    --ff-surface-1: rgba(255, 255, 255, 0.04);
+    --ff-surface-2: rgba(255, 255, 255, 0.06);
+    --ff-surface-3: rgba(255, 255, 255, 0.08);
+    --ff-surface-hover: rgba(255, 255, 255, 0.10);
+
+    /* Text */
+    --ff-text-primary: #e2e8f0;
+    --ff-text-secondary: #94a3b8;
+    --ff-text-muted: #64748b;
+
+    /* Accent */
+    --ff-accent-blue: #3b82f6;
+    --ff-accent-cyan: #06b6d4;
+    --ff-accent-gradient: linear-gradient(135deg, #3b82f6, #06b6d4);
+    --ff-accent-gradient-hover: linear-gradient(135deg, #2563eb, #0891b2);
+
+    /* Borders */
+    --ff-border-subtle: rgba(255, 255, 255, 0.06);
+    --ff-border-light: rgba(255, 255, 255, 0.08);
+    --ff-border-medium: rgba(255, 255, 255, 0.12);
+    --ff-border-accent: rgba(59, 130, 246, 0.4);
+
+    /* Shadows */
+    --ff-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --ff-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.2);
+    --ff-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.3);
+    --ff-shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);
+
+    /* Glass */
+    --ff-glass-blur: blur(16px);
+    --ff-glass-bg: rgba(15, 23, 42, 0.75);
+
+    /* Radius */
+    --ff-radius-sm: 8px;
+    --ff-radius-md: 12px;
+    --ff-radius-lg: 16px;
+    --ff-radius-xl: 20px;
+    --ff-radius-2xl: 24px;
+
+    /* Spacing */
+    --ff-nav-height: 64px;
+
+    /* Transitions */
+    --ff-transition-fast: 0.15s ease;
+    --ff-transition-normal: 0.25s ease;
+    --ff-transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Global Reset & Base ---------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--ff-bg-base);
+    color: var(--ff-text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ---------- App Background ---------- */
 .app-bg {
-    min-height: calc(100vh - 56px); /* Navbar ke neeche */
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    padding: 20px;
-    color: #fff;
+    min-height: 100vh;
+    padding-top: var(--ff-nav-height);
+
+    /* Multi-layer gradient background */
+    background:
+        radial-gradient(ellipse at 20% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 80%),
+        linear-gradient(180deg, #0f172a 0%, #020617 100%);
+
+    color: var(--ff-text-primary);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------- Selection ---------- */
+::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: white;
+}
+
+/* ---------- Focus (Accessibility) ---------- */
+:focus-visible {
+    outline: 2px solid var(--ff-accent-blue);
+    outline-offset: 2px;
+}
+
+/* ---------- Utility Classes ---------- */
+.ff-glass {
+    background: var(--ff-glass-bg);
+    backdrop-filter: var(--ff-glass-blur);
+    -webkit-backdrop-filter: var(--ff-glass-blur);
+    border: 1px solid var(--ff-border-light);
+}
+
+.ff-card {
+    background: var(--ff-surface-2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--ff-border-light);
+    border-radius: var(--ff-radius-lg);
+    transition: all var(--ff-transition-smooth);
+}
+
+.ff-card:hover {
+    background: var(--ff-surface-hover);
+    border-color: var(--ff-border-accent);
+    box-shadow: var(--ff-shadow-glow);
+    transform: translateY(-4px);
+}
+
+.ff-gradient-text {
+    background: var(--ff-accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ff-btn-primary {
+    background: var(--ff-accent-gradient);
+    border: none;
+    padding: 10px 24px;
+    border-radius: var(--ff-radius-sm);
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--ff-transition-normal);
+    font-family: 'Inter', sans-serif;
+}
+
+.ff-btn-primary:hover {
+    background: var(--ff-accent-gradient-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+.ff-btn-secondary {
+    background: var(--ff-surface-2);
+    border: 1px solid var(--ff-border-medium);
+    padding: 10px 24px;
+    border-radius: var(--ff-radius-sm);
+    color: var(--ff-text-primary);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--ff-transition-normal);
+    font-family: 'Inter', sans-serif;
+}
+
+.ff-btn-secondary:hover {
+    background: var(--ff-surface-hover);
+    border-color: var(--ff-border-accent);
+    transform: translateY(-2px);
+}
+
+/* ---------- Animations ---------- */
+@keyframes ff-fade-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ff-fade-in-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ff-scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ff-slide-in-left {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ff-pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.1); }
+    50%      { box-shadow: 0 0 40px rgba(59, 130, 246, 0.2); }
+}
+
+@keyframes ff-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.ff-animate-in {
+    animation: ff-fade-in 0.5s ease both;
+}
+
+.ff-stagger-1 { animation-delay: 0.05s; }
+.ff-stagger-2 { animation-delay: 0.1s; }
+.ff-stagger-3 { animation-delay: 0.15s; }
+.ff-stagger-4 { animation-delay: 0.2s; }
+.ff-stagger-5 { animation-delay: 0.25s; }
+.ff-stagger-6 { animation-delay: 0.3s; }
+
+/* ---------- Responsive helpers ---------- */
+@media (max-width: 768px) {
+    .app-bg {
+        padding-top: 56px;
+    }
+    :root {
+        --ff-nav-height: 56px;
+    }
 }
