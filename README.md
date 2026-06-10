@@ -53,7 +53,7 @@ To get a local copy up and running, follow these simple steps.
 
 1.  **Clone the repo**
     ```sh
-    git clone https://github.com/your_username/FileFusion-Multi-Cloud-Storage-App.git
+    git clone https://github.com/Imtiaz-Ali17314/FileFusion-Multi-Cloud-Storage-App.git
     ```
 2.  **Install PHP Dependencies**
     ```sh
@@ -116,4 +116,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Project Link: [https://github.com/your_username/FileFusion-Multi-Cloud-Storage-App](https://github.com/your_username/FileFusion-Multi-Cloud-Storage-App)
+Project Link: [https://github.com/Imtiaz-Ali17314/FileFusion-Multi-Cloud-Storage-App](https://github.com/Imtiaz-Ali17314/FileFusion-Multi-Cloud-Storage-App)
