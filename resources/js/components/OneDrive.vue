@@ -30,7 +30,7 @@
             <div class="sidebar-divider"></div>
 
             <div class="sidebar-footer">
-                <a href="/auth/onedrive" class="connect-btn">
+                <a @click="oneDriveConnect" class="connect-btn">
                     <i class="bi bi-plug"></i>
                     <span>Connect / Reconnect</span>
                 </a>
@@ -51,11 +51,8 @@
                         <span class="crumb" @click="goHome">Root</span>
                         <template v-for="(seg, idx) in pathSegments" :key="idx">
                             <i class="bi bi-chevron-right crumb-sep"></i>
-                            <span
-                                class="crumb"
-                                :class="{ 'crumb-active': idx === pathSegments.length - 1 }"
-                                @click="idx !== pathSegments.length - 1 && goToCrumb(idx)"
-                            >
+                            <span class="crumb" :class="{ 'crumb-active': idx === pathSegments.length - 1 }"
+                                @click="idx !== pathSegments.length - 1 && goToCrumb(idx)">
                                 {{ seg }}
                             </span>
                         </template>
@@ -66,12 +63,7 @@
                 <div class="topbar-right">
                     <div class="search-wrapper">
                         <i class="bi bi-search search-icon"></i>
-                        <input
-                            v-model="query"
-                            type="text"
-                            class="search-input"
-                            placeholder="Search files..."
-                        />
+                        <input v-model="query" type="text" class="search-input" placeholder="Search files..." />
                     </div>
 
                     <div class="topbar-actions">
@@ -79,13 +71,7 @@
                             <i class="bi bi-cloud-arrow-up"></i>
                             <span>Upload</span>
                         </label>
-                        <input
-                            type="file"
-                            id="odFileInput"
-                            multiple
-                            @change="uploadFiles"
-                            style="display: none;"
-                        />
+                        <input type="file" id="odFileInput" multiple @change="uploadFiles" style="display: none;" />
 
                         <button class="action-btn" @click="createFolderPrompt">
                             <i class="bi bi-folder-plus"></i>
@@ -112,13 +98,8 @@
 
             <!-- Files Grid -->
             <div v-else class="files-grid">
-                <div
-                    v-for="(item, i) in filteredFiles"
-                    :key="item.id"
-                    class="file-card"
-                    :style="{ animationDelay: (i * 0.03) + 's' }"
-                    @dblclick="openItem(item)"
-                >
+                <div v-for="(item, i) in filteredFiles" :key="item.id" class="file-card"
+                    :style="{ animationDelay: (i * 0.03) + 's' }" @dblclick="openItem(item)">
                     <div class="file-icon" :style="{ color: getIconColor(item) }">
                         <i :class="fileIcon(item)"></i>
                     </div>
@@ -134,26 +115,15 @@
 
                     <!-- Actions -->
                     <div class="file-actions">
-                        <button
-                            class="file-action-btn"
-                            title="Preview"
-                            @click.stop="preview(item)"
-                        >
+                        <button class="file-action-btn" title="Preview" @click.stop="preview(item)">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button
-                            v-if="!item.folder"
-                            class="file-action-btn"
-                            title="Download"
-                            @click.stop="download(item)"
-                        >
+                        <button v-if="!item.folder" class="file-action-btn" title="Download"
+                            @click.stop="download(item)">
                             <i class="bi bi-download"></i>
                         </button>
-                        <button
-                            class="file-action-btn file-action-danger"
-                            title="Delete"
-                            @click.stop="deleteItem(item)"
-                        >
+                        <button class="file-action-btn file-action-danger" title="Delete"
+                            @click.stop="deleteItem(item)">
                             <i class="bi bi-trash3"></i>
                         </button>
                     </div>
@@ -184,12 +154,8 @@
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
-                    <iframe
-                        v-if="previewUrl"
-                        :src="previewUrl"
-                        class="preview-frame"
-                        referrerpolicy="no-referrer"
-                    ></iframe>
+                    <iframe v-if="previewUrl" :src="previewUrl" class="preview-frame"
+                        referrerpolicy="no-referrer"></iframe>
                     <div v-else class="preview-unavailable">
                         <i class="bi bi-eye-slash"></i>
                         <p>Preview not available. Try downloading instead.</p>
@@ -237,6 +203,9 @@ export default {
         this.fetchFiles("/");
     },
     methods: {
+        oneDriveConnect() {
+            alert('This feature is currently being added. Please check back soon!');
+        },
         // ------------ UI helpers ------------
         connectOneDrive() {
             window.location.href = "/auth/onedrive";
@@ -743,7 +712,9 @@ export default {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ========== EMPTY STATE ========== */
@@ -1030,18 +1001,39 @@ export default {
 
 /* ========== ANIMATIONS ========== */
 @keyframes ff-slide-in-left {
-    from { opacity: 0; transform: translateX(-20px); }
-    to   { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes ff-fade-in {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes ff-scale-in {
-    from { opacity: 0; transform: scale(0.95); }
-    to   { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* ========== RESPONSIVE ========== */

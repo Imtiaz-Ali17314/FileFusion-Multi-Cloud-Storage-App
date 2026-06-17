@@ -28,6 +28,10 @@ export default {
         },
     },
     methods: {
+        googleDriveConnect() {
+            alert('This feature is currently being added. Please check back soon!');
+        },
+
         async loadRootOptions() {
             this.files = [
                 { id: "mydrive", name: "My Files", isFolder: true },
@@ -139,19 +143,13 @@ export default {
             </div>
 
             <nav class="sidebar-nav">
-                <button
-                    class="sidebar-item"
-                    :class="{ active: activeSection === 'mydrive' }"
-                    @click="sidebarNavigate('mydrive')"
-                >
+                <button class="sidebar-item" :class="{ active: activeSection === 'mydrive' }"
+                    @click="sidebarNavigate('mydrive')">
                     <i class="bi bi-hdd"></i>
                     <span>My Drive</span>
                 </button>
-                <button
-                    class="sidebar-item"
-                    :class="{ active: activeSection === 'shared' }"
-                    @click="sidebarNavigate('shared')"
-                >
+                <button class="sidebar-item" :class="{ active: activeSection === 'shared' }"
+                    @click="sidebarNavigate('shared')">
                     <i class="bi bi-people"></i>
                     <span>Shared with Me</span>
                 </button>
@@ -164,7 +162,7 @@ export default {
             <div class="sidebar-divider"></div>
 
             <div class="sidebar-footer">
-                <a href="/auth/google" class="connect-btn">
+                <a @click="googleDriveConnect" class="connect-btn">
                     <i class="bi bi-plug"></i>
                     <span>Connect / Reconnect</span>
                 </a>
@@ -177,11 +175,7 @@ export default {
             <!-- Top Bar -->
             <div class="drive-topbar">
                 <div class="topbar-left">
-                    <button
-                        v-if="folderStack.length > 0"
-                        @click="goBack"
-                        class="back-btn"
-                    >
+                    <button v-if="folderStack.length > 0" @click="goBack" class="back-btn">
                         <i class="bi bi-arrow-left"></i>
                     </button>
                     <h2 class="topbar-title">{{ currentFolderName }}</h2>
@@ -190,12 +184,7 @@ export default {
                 <div class="topbar-right">
                     <div class="search-wrapper">
                         <i class="bi bi-search search-icon"></i>
-                        <input
-                            v-model="q"
-                            type="text"
-                            class="search-input"
-                            placeholder="Search files..."
-                        />
+                        <input v-model="q" type="text" class="search-input" placeholder="Search files..." />
                     </div>
                 </div>
             </div>
@@ -217,13 +206,8 @@ export default {
 
             <!-- Files Grid -->
             <div v-else class="files-grid">
-                <div
-                    v-for="(f, i) in filtered"
-                    :key="f.id"
-                    class="file-card"
-                    :style="{ animationDelay: (i * 0.03) + 's' }"
-                    @dblclick="openItem(f)"
-                >
+                <div v-for="(f, i) in filtered" :key="f.id" class="file-card"
+                    :style="{ animationDelay: (i * 0.03) + 's' }" @dblclick="openItem(f)">
                     <div class="file-icon" :style="{ color: getIconColor(f) }">
                         <i :class="getFileIcon(f)"></i>
                     </div>
@@ -468,7 +452,9 @@ export default {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ========== EMPTY STATE ========== */
